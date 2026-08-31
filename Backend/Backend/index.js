@@ -8,18 +8,48 @@ const bcrypt = require('bcrypt');
 const saltRounds = 10;
 require("dotenv").config();
 
+const fs = require("fs");
+const path = require("path");
+
 let App = express();
 App.use(cors());
 App.use(express.json());
 
-App.use("/uploads/category", express.static("uploads/category"));
-App.use("/uploads/subcategory", express.static("uploads/subcategory"));
-App.use("/uploads/subsubcategory", express.static("uploads/subsubcategory"));
-App.use("/uploads/product", express.static("uploads/product"));
-App.use("/uploads/slider", express.static("uploads/slider"));
-App.use("/uploads/whychooseus", express.static("uploads/whychooseus"));
-App.use("/uploads/user", express.static("uploads/user"));
-App.use("/uploads/admin", express.static("uploads/admin"));
+// Ensure upload folders exist
+const uploadDirs = [
+  "uploads/category",
+  "uploads/subcategory",
+  "uploads/subsubcategory",
+  "uploads/product",
+  "uploads/slider",
+  "uploads/whychooseus",
+  "uploads/user",
+  "uploads/admin",
+  "Uploads/category",
+  "Uploads/subcategory",
+  "Uploads/subsubcategory",
+  "Uploads/product",
+  "Uploads/slider",
+  "Uploads/whychooseus",
+  "Uploads/user",
+  "Uploads/admin",
+];
+
+uploadDirs.forEach((dir) => {
+  const fullPath = path.join(__dirname, dir);
+  if (!fs.existsSync(fullPath)) {
+    fs.mkdirSync(fullPath, { recursive: true });
+  }
+});
+
+App.use("/uploads/category", express.static(path.join(__dirname, "uploads/category")), express.static(path.join(__dirname, "Uploads/category")));
+App.use("/uploads/subcategory", express.static(path.join(__dirname, "uploads/subcategory")), express.static(path.join(__dirname, "Uploads/subcategory")));
+App.use("/uploads/subsubcategory", express.static(path.join(__dirname, "uploads/subsubcategory")), express.static(path.join(__dirname, "Uploads/subsubcategory")));
+App.use("/uploads/product", express.static(path.join(__dirname, "uploads/product")), express.static(path.join(__dirname, "Uploads/product")));
+App.use("/uploads/slider", express.static(path.join(__dirname, "uploads/slider")), express.static(path.join(__dirname, "Uploads/slider")));
+App.use("/uploads/whychooseus", express.static(path.join(__dirname, "uploads/whychooseus")), express.static(path.join(__dirname, "Uploads/whychooseus")));
+App.use("/uploads/user", express.static(path.join(__dirname, "uploads/user")), express.static(path.join(__dirname, "Uploads/user")));
+App.use("/uploads/admin", express.static(path.join(__dirname, "uploads/admin")), express.static(path.join(__dirname, "Uploads/admin")));
 
 App.use("/admin", adminRoutesroutes);
 App.use("/web", webRoutes);
