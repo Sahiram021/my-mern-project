@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0b4ba2"/>
+      <stop offset="100%" stop-color="#06224c"/>
+    </linearGradient>
+    <linearGradient id="accentGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fb923c"/>
+      <stop offset="100%" stop-color="#ea580c"/>
+    </linearGradient>
+    <linearGradient id="crystalGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="100%" stop-color="#cbd5e1"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="110" fill="url(#bgGrad)"/>
+  <rect x="18" y="18" width="476" height="476" rx="92" fill="none" stroke="#38bdf8" stroke-width="10" opacity="0.4"/>
+  <polygon points="256,65 355,160 256,235 157,160" fill="url(#crystalGrad)"/>
+  <polygon points="256,65 355,160 256,160" fill="#f8fafc" opacity="0.6"/>
+  <polygon points="256,235 355,160 256,160" fill="#94a3b8" opacity="0.5"/>
+  <polygon points="157,160 256,235 256,160" fill="#cbd5e1" opacity="0.7"/>
+  <circle cx="256" cy="160" r="26" fill="url(#accentGrad)"/>
+  <text x="256" y="395" font-family="'Segoe UI', -apple-system, Arial, sans-serif" font-size="140" font-weight="900" fill="#ffffff" text-anchor="middle" letter-spacing="4">JGB</text>
+  <text x="256" y="445" font-family="'Segoe UI', -apple-system, Arial, sans-serif" font-size="32" font-weight="800" fill="#fb923c" text-anchor="middle" letter-spacing="8">MINERALS</text>
+</svg>
