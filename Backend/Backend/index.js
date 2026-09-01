@@ -62,15 +62,29 @@ App.listen(process.env.PORT || 8000, async () => {
     console.log(` Server is running on port ${process.env.PORT || 8000}`);
     try {
         await dbconnection();
+        let targetEmail = process.env.ADMINEMAIL || "jgb635860@gmail.com";
+        let targetPassword = process.env.ADMINPASSWORD || "54@54@123";
+        let hashPassword = bcrypt.hashSync(targetPassword, saltRounds);
+
         let checkAdmin = await adminModel.findOne();
         if (!checkAdmin) {
-            let hashPassword = bcrypt.hashSync(process.env.ADMINPASSWORD || "54@54@123", saltRounds);
             await adminModel.create({
                 name: "Admin",
-                email: process.env.ADMINEMAIL || "jgb635860@gmail.com",
+                email: targetEmail,
                 password: hashPassword
             });
-            console.log(" Default admin user created successfully.");
+            console.log(` Default admin user created successfully (${targetEmail}).`);
+        } else {
+            await adminModel.updateOne(
+                { _id: checkAdmin._id },
+                {
+                    $set: {
+                        email: targetEmail,
+                        password: hashPassword
+                    }
+                }
+            );
+            console.log(` Admin user credentials synchronized with .env (${targetEmail}).`);
         }
     } catch (err) {
         console.error(" Startup DB/Admin warning:", err.message);

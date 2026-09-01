@@ -30,6 +30,7 @@ let orderSchema=new mongoose.Schema({
         enum: [
         "pending",
         "processing",
+        "success",
         "placed",
         "shipped",
         "delivered",
