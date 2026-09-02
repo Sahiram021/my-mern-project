@@ -58,7 +58,7 @@ export default function LoginRegisterPage() {
           dispatch(getToken({ token: finalRes.token }));
           dispatch(fetchCartById());
           dispatch(fetchWishlist());
-          router.push("/");
+          router.push("/my-dashboard");
         } else {
           const msg = finalRes.message || "Invalid credentials";
           toast.error(msg);
@@ -130,8 +130,10 @@ export default function LoginRegisterPage() {
             localStorage.setItem("token", finalRes.token);
           }
           dispatch(getToken({ token: finalRes.token }));
+          dispatch(fetchCartById());
+          dispatch(fetchWishlist());
           setLoading(false);
-          router.push("/");
+          router.push("/my-dashboard");
           return;
         }
 
@@ -148,13 +150,15 @@ export default function LoginRegisterPage() {
               localStorage.setItem("token", loginData.token);
             }
             dispatch(getToken({ token: loginData.token }));
+            dispatch(fetchCartById());
+            dispatch(fetchWishlist());
           }
         } catch (loginErr) {
           console.log("Auto-login error:", loginErr?.message);
         }
 
         setLoading(false);
-        router.push("/");
+        router.push("/my-dashboard");
       } else {
         setLoading(false);
         const msg = finalRes.message || "Registration failed";

@@ -68,7 +68,7 @@ export default function ReadyToShipPage() {
   const dispatch = useDispatch();
   const token = useSelector((state) => state.userStore?.token);
   const wishlist = useSelector((state) => state.wishlistStore?.wishlist || []);
-  const apibaseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/web/";
+  const apibaseUrl = process.env.NEXT_PUBLIC_API_URL || "https://jgbmtrading.online/api/web/";
 
   // Data states - initialized with official verified catalog immediately
   const [allProducts, setAllProducts] = useState(() =>

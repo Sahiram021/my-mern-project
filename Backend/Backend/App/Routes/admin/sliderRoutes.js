@@ -1,5 +1,5 @@
 let express = require("express");
-const multer = require("multer");
+const { createImageUpload } = require("../../config/upload");
 const {
   sliderCreate,
   sliderView,
@@ -12,16 +12,7 @@ const {
 
 let sliderRoutes = express.Router();
 
-let storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, "uploads/slider");
-  },
-  filename: (req, file, cb) => {
-    cb(null, Date.now() + file.originalname);
-  },
-});
-
-const upload = multer({ storage });
+const upload = createImageUpload("slider", { maxCount: 1 });
 
 sliderRoutes.post("/create", upload.single("image"), sliderCreate);
 sliderRoutes.get("/view", sliderView);

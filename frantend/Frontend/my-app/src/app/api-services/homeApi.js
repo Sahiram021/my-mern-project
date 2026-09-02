@@ -1,10 +1,11 @@
 import axios from "axios";
+import { getBackendUrl } from "../utils/imageUrl";
 
-let apibaseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/web/";
+let apibaseUrl = process.env.NEXT_PUBLIC_API_URL || "https://jgbmtrading.online/api/web/";
 
 let productTabs = async () => {
   try {
-    let staticPath = `${apibaseUrl.replace(/\/web\/?$/, "")}/uploads/product/`;
+    let staticPath = `${getBackendUrl()}/uploads/product/`;
     let productsList = [];
 
     // Fetch full products list with productType ("Featured", "New", "On Sale")
@@ -70,4 +71,4 @@ let review = async () => {
 };
 
 export { productTabs, Sliderr, review };
-
+

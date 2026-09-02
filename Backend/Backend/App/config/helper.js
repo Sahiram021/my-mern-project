@@ -16,9 +16,12 @@ let createSlug = (name) => {
 const getTransporter = () => {
     const host = process.env.SMTP_HOST || "smtp.gmail.com";
     const port = Number(process.env.SMTP_PORT) || 587;
-    const user = process.env.SMTP_USER || "jgb635860@gmail.com";
-    const rawPass = process.env.SMTP_PASS || "rzyjmqzfhsqfhwyz";
-    const pass = rawPass ? rawPass.replace(/\s+/g, "") : "rzyjmqzfhsqfhwyz";
+    const user = process.env.SMTP_USER;
+    const pass = process.env.SMTP_PASS?.replace(/\s+/g, "");
+
+    if (!user || !pass) {
+        return null;
+    }
 
     return nodemailer.createTransport({
         host,
@@ -28,9 +31,6 @@ const getTransporter = () => {
             user,
             pass
         },
-        tls: {
-            rejectUnauthorized: false
-        }
     });
 };
 
@@ -57,6 +57,10 @@ const sendEmailSafe = async ({ to, subject, html, text, from }) => {
 
     try {
         const mailer = getTransporter();
+        if (!mailer) {
+            console.warn("[Email Safe] Skipped: SMTP_USER and SMTP_PASS are required");
+            return { success: false, error: "SMTP is not configured" };
+        }
         const info = await mailer.sendMail(mailOptions);
         console.log(`[Email SUCCESS] Sent to: ${mailOptions.to} | Subject: "${mailOptions.subject}" | ID: ${info.messageId}`);
         return { success: true, messageId: info.messageId };

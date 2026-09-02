@@ -1,77 +1,88 @@
 const mongoose = require("mongoose");
 const orderModel = require("../Models/orderModel");
 
-let viewOrders = async (req, res) => {
+const allowedOrderStatuses = [
+    "pending",
+    "processing",
+    "success",
+    "placed",
+    "shipped",
+    "delivered",
+    "cancelled"
+];
+
+const allowedPaymentStatuses = ["pending", "success", "cancelled"];
+
+const viewOrders = async (_req, res) => {
     try {
-        let data = await orderModel.find().sort({ createdAt: -1 });
-        res.send({ message: "Order View", status: 1, data });
-    } catch (error) {
-        res.send({ message: "Unable to fetch orders", status: 0, error: error.message });
+        const data = await orderModel.find().sort({ createdAt: -1 });
+        return res.status(200).send({ message: "Order View", status: 1, data });
+    } catch (_error) {
+        return res.status(500).send({ message: "Unable to fetch orders", status: 0 });
     }
 };
 
-let updateOrderStatus = async (req, res) => {
+const updateOrderStatus = async (req, res) => {
     try {
-        let id = req.params.id || req.body.id || req.body._id || req.query.id;
-        let rawStatus = req.body.status || req.query.status;
+        const id = req.params.id || req.body.orderId || req.body.id || req.body._id || req.query.id;
+        const rawStatus = req.body.status ?? req.query.status;
 
         if (!id || !mongoose.Types.ObjectId.isValid(id.toString().trim())) {
-            return res.send({
+            return res.status(400).send({
                 message: "Invalid Order ID format",
                 status: 0
             });
         }
 
-        let cleanId = id.toString().trim();
-        let status = (rawStatus || "").toString().toLowerCase().trim();
+        const cleanId = id.toString().trim();
+        const status = (rawStatus || "").toString().toLowerCase().trim();
 
-        let allowedStatus = [
-            "pending",
-            "processing",
-            "success",
-            "placed",
-            "shipped",
-            "delivered",
-            "cancelled"
-        ];
-
-        if (!status || !allowedStatus.includes(status)) {
-            return res.send({
+        if (!status || !allowedOrderStatuses.includes(status)) {
+            return res.status(400).send({
                 message: "Invalid order status",
                 status: 0,
-                error: { status: `Status must be one of: ${allowedStatus.join(", ")}` }
+                error: { status: `Status must be one of: ${allowedOrderStatuses.join(", ")}` }
             });
         }
 
-        let updateObj = { status };
-        if (req.body.PaymentStatus) {
-            updateObj.PaymentStatus = req.body.PaymentStatus.toString().toLowerCase().trim();
+        const updateObj = { status };
+        if (req.body.PaymentStatus != null) {
+            const paymentStatus = req.body.PaymentStatus.toString().toLowerCase().trim();
+            if (!allowedPaymentStatuses.includes(paymentStatus)) {
+                return res.status(400).send({
+                    message: "Invalid payment status",
+                    status: 0,
+                    error: {
+                        PaymentStatus: `Payment status must be one of: ${allowedPaymentStatuses.join(", ")}`
+                    }
+                });
+            }
+            updateObj.PaymentStatus = paymentStatus;
         } else if (status === "success") {
             updateObj.PaymentStatus = "success";
         }
 
-        let orderRes = await orderModel.findByIdAndUpdate(
+        const order = await orderModel.findByIdAndUpdate(
             cleanId,
             { $set: updateObj },
-            { returnDocument: 'after', new: true }
+            { new: true, runValidators: true }
         );
 
-        if (!orderRes) {
-            return res.send({ message: "Order not found", status: 0 });
+        if (!order) {
+            return res.status(404).send({ message: "Order not found", status: 0 });
         }
 
-        res.send({
+        return res.status(200).send({
             message: "Order status updated successfully",
             status: 1,
-            data: orderRes
+            data: order
         });
-    } catch (error) {
-        res.send({
+    } catch (_error) {
+        return res.status(500).send({
             message: "Unable to update order status",
-            status: 0,
-            error: error.message
+            status: 0
         });
     }
 };
 
-module.exports = { viewOrders, updateOrderStatus };
+module.exports = { viewOrders, updateOrderStatus, allowedOrderStatuses };

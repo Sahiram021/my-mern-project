@@ -14,6 +14,7 @@ import {
   fetchWishlist,
   removeFromWishlist,
 } from "@/app/slice/wishlistSlice";
+import { buildProductImageUrl } from "@/app/utils/imageUrl";
 
 async function showToast(type, message) {
   try {
@@ -155,12 +156,8 @@ function ProductCard({ path, productData }) {
   const token = useSelector((state) => state.userStore.token);
   const wishlist = useSelector((state) => state.wishlistStore?.wishlist || []);
 
-  const backend = "http://localhost:8000";
-  const basePath = path || `${backend}/uploads/product/`;
   const rawImage = productData?.image || "";
-  const productImage = rawImage.startsWith("http") || rawImage.startsWith("/")
-    ? rawImage
-    : `${basePath.replace(/\/?$/, "/")}${rawImage.replace(/^\//, "")}`;
+  const productImage = buildProductImageUrl(rawImage, path);
 
   const productCategory =
     productData?.parentCategory?.name ||

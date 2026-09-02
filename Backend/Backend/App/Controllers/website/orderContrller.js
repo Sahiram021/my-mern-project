@@ -52,7 +52,7 @@ let saveOrder = async (req, res) => {
         }
 
         let token = authHeader.split(" ")[1] || authHeader;
-        let decoded = jwt.verify(token, process.env.TOKENKEY || "12345");
+        let decoded = jwt.verify(token, process.env.TOKENKEY);
         let { id } = decoded;
 
         if (orderObject.paymentMethod === "cod") {
@@ -107,7 +107,7 @@ let varifyPayment = async (req, res) => {
         }
 
         let token = authHeader.split(" ")[1] || authHeader;
-        let decoded = jwt.verify(token, process.env.TOKENKEY || "12345");
+        let decoded = jwt.verify(token, process.env.TOKENKEY);
         let { id } = decoded;
 
         let updatedOrder = await orderModel.findOneAndUpdate(
@@ -142,7 +142,7 @@ let viewOrders = async (req, res) => {
         if (!authHeader) return res.send({ status: 0, message: "Authorization token required" });
 
         let token = authHeader.split(" ")[1] || authHeader;
-        let decoded = jwt.verify(token, process.env.TOKENKEY || "12345");
+        let decoded = jwt.verify(token, process.env.TOKENKEY);
         let { id } = decoded;
 
         let orders = await orderModel.find({ userId: id }).sort({ createdAt: -1 });
@@ -169,7 +169,7 @@ let getOrderDetails = async (req, res) => {
         if (!authHeader) return res.send({ status: 0, message: "Authorization token required" });
 
         let token = authHeader.split(" ")[1] || authHeader;
-        let decoded = jwt.verify(token, process.env.TOKENKEY || "12345");
+        let decoded = jwt.verify(token, process.env.TOKENKEY);
         let { id } = decoded;
         let { orderId } = req.params;
 

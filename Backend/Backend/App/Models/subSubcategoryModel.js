@@ -7,14 +7,17 @@ let subSubcategorySchema=mongoose.Schema(
             minLength:[2,"subSubcategory name minimum length of name is 2"], // minimum length of name is 2
             maxLength:[50," subSubcategory name maximum length of name is 50"], // maximum length of name is 15
             required:[true,"subSubcategory name is required"], // name is required,
+            trim:true,
         },
         parentCategory:{
             type:mongoose.Schema.Types.ObjectId, 
             ref:"category", 
+            required:[true,"parent category is required"],
         },
         subcategory:{
             type:mongoose.Schema.Types.ObjectId, 
             ref:"subcategory", 
+            required:[true,"subcategory is required"],
         },
          image:{
             type:String, // metal,plastic,wood
@@ -28,7 +31,9 @@ let subSubcategorySchema=mongoose.Schema(
         slug:{
             type:String, // metal,plastic,wood
             minLength:[2,"subSubcategory slug minimum length of slug is 2"], 
-           
+            required:[true,"subSubcategory slug is required"],
+            lowercase:true,
+            trim:true,
         },
         order:{
             type:Number, // 1,2,3,4

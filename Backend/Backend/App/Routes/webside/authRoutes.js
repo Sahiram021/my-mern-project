@@ -1,19 +1,9 @@
 let express = require("express");
 const { register, login, changePassword, updateProfile, getProfile, forgotPassword, resetPassword } = require("../../Controllers/website/authController");
 let authRoutes = express.Router();
-const multer  = require('multer')
+const { createImageUpload } = require('../../config/upload')
 
-let storage = multer.diskStorage({
-    destination:(req,file,cb)=>{
-        cb(null, 'uploads/user')
-    },
-    filename:(req,file,cb)=>{
-        cb(null,  Date.now()+ file.originalname)
-    }
-})
-
-
-const upload = multer({storage:storage})
+const upload = createImageUpload("user", { maxCount: 1 })
 
 
 

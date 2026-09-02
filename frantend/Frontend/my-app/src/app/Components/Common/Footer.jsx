@@ -19,7 +19,7 @@ export default function Footer() {
   useEffect(() => {
     const getFooterData = async () => {
       try {
-        const apibaseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/web/";
+        const apibaseUrl = process.env.NEXT_PUBLIC_API_URL || "https://jgbmtrading.online/api/web/";
         const res = await fetch(`${apibaseUrl}footer`, { cache: "no-store" });
         if (res.ok) {
           const result = await res.json();
@@ -200,4 +200,3 @@ export default function Footer() {
     </footer>
   );
 }
-

@@ -6,17 +6,20 @@ import { Link, useNavigate } from 'react-router'
 import { getToken } from '../../../slice/adminSlice'
 import { useDispatch } from 'react-redux'
 import JgbLogo from '../common/JgbLogo'
+import { useState } from 'react'
 
 export default function Login() {
   const navigate = useNavigate()
   const dispatch = useDispatch()
   const apiBaseUrl = import.meta.env.VITE_APIBASEPATH || 'http://localhost:8000/admin/'
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
 
   const handleLogin = (e) => {
     e.preventDefault()
     const obj = {
-      email: e.target.email.value,
-      password: e.target.password.value,
+      email,
+      password,
     }
 
     axios.post(`${apiBaseUrl}adminauth/login`, obj)
@@ -37,7 +40,7 @@ export default function Login() {
         console.error(err)
         iziToast.error({
           title: 'Server error',
-          message: 'Server connection error. Please ensure backend is running on port 8000.',
+          message: err.response?.data?.message || 'Unable to contact the admin API. Please try again.',
           position: 'topRight',
         })
       })
@@ -101,6 +104,9 @@ export default function Login() {
                   id='login-email'
                   name='email'
                   type='email'
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
+                  autoComplete='username'
                   placeholder='Enter admin email'
                   className='w-full border-0 px-3 py-3 text-xs font-medium text-slate-800 outline-none bg-transparent'
                   required
@@ -118,6 +124,9 @@ export default function Login() {
                   id='login-password'
                   name='password'
                   type='password'
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                  autoComplete='current-password'
                   placeholder='Enter password'
                   className='w-full border-0 px-3 py-3 text-xs font-medium text-slate-800 outline-none bg-transparent'
                   required

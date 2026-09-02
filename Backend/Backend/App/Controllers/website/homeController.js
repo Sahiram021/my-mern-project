@@ -2,13 +2,15 @@ const productModel = require("../../Models/productModel");
 const sliderModel = require("../../Models/sliderModel");
 const whyChooseUsModel = require("../../Models/whyChooseUsModel");
 const { sendEmailSafe } = require("../../config/helper");
+const { getUploadStaticPath } = require("../../config/controllerUtils");
 
 let productTabs = async (req, res) => {
     try {
         let data = await productModel.find({ status: true })
             .select(['image', 'name', 'price', 'parentCategory'])
-            .populate("parentCategory", 'name');
-        let staticPath = process.env.PRODUCTIMAGEPATH;
+            .populate("parentCategory", 'name')
+            .sort({ order: 1, date: -1 });
+        let staticPath = getUploadStaticPath(req, "product", process.env.PRODUCTIMAGEPATH);
         res.send({ message: "product View", status: 1, staticPath, data });
     } catch (err) {
         res.send({ message: "Error fetching products", status: 0, error: err.message });
@@ -17,8 +19,11 @@ let productTabs = async (req, res) => {
 
 let slider = async (req, res) => {
     try {
-        let data = await sliderModel.find({ status: true }).select(['title', 'subTitle', 'image', 'link']);
-        let staticPath = process.env.SLIDERIMAGEPATH;
+        let data = await sliderModel
+            .find({ status: true })
+            .select(['title', 'subTitle', 'image', 'link', 'order'])
+            .sort({ order: 1, date: -1 });
+        let staticPath = getUploadStaticPath(req, "slider", process.env.SLIDERIMAGEPATH);
         res.send({ message: "slider View", status: 1, staticPath, data });
     } catch (err) {
         res.send({ message: "Error fetching sliders", status: 0, error: err.message });
@@ -28,7 +33,7 @@ let slider = async (req, res) => {
 let review = async (req, res) => {
     try {
         let data = await whyChooseUsModel.find({ status: true }).select(['title', 'description', 'image', 'order', 'rating']);
-        let staticPath = process.env.WHYCHOOSEUSIMAGEPATH;
+        let staticPath = getUploadStaticPath(req, "whychooseus", process.env.WHYCHOOSEUSIMAGEPATH);
         res.send({ message: "whychooseus View", status: 1, staticPath, data });
     } catch (err) {
         res.send({ message: "Error fetching reviews", status: 0, error: err.message });

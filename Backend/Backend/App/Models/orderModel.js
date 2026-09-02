@@ -27,6 +27,8 @@ let orderSchema=new mongoose.Schema({
     },
     status:{
         type:String,
+        lowercase: true,
+        trim: true,
         enum: [
         "pending",
         "processing",
@@ -40,11 +42,14 @@ let orderSchema=new mongoose.Schema({
     },
      PaymentStatus:{
         type:String,
+        lowercase: true,
+        trim: true,
         enum: [
         "pending",
         "success",
         "cancelled"
-    ]
+    ],
+        default:"pending",
     }
 },{timestamps:true})
 

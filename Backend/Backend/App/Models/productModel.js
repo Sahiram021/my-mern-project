@@ -7,14 +7,17 @@ let productSchema = mongoose.Schema(
             minLength: [2, "product name minimum length of name is 2"], // minimum length of name is 2
             maxLength: [500, " product name maximum length of name is 500"], // maximum length of name is 15
             required: [true, "product name is required"], // name is required,
+            trim: true,
         },
         parentCategory: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "category",
+            required: [true, "parent category is required"],
         },
         subcategory: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "subcategory",
+            required: [true, "subcategory is required"],
         },
         subsubcategory: {
             type: mongoose.Schema.Types.ObjectId,
@@ -29,10 +32,13 @@ let productSchema = mongoose.Schema(
         },
         price: {
             type: Number,
+            required: [true, "product price is required"],
+            min: [0, "product price cannot be negative"],
         },
         salePrice: {
             type: Number,
             default: 0,
+            min: [0, "sale price cannot be negative"],
         },
 
         // Product rating
@@ -59,9 +65,12 @@ let productSchema = mongoose.Schema(
         image: {
             type: String, // metal,plastic,wood
             minLength: [2, "subcategory image minimum length of image is 2"], // minimum length of image is 2
-            required: [true, "subcategory image is required"], // name is required,
+            required: [true, "product image is required"], // name is required,
         },
-        gallery: Array,
+        gallery: {
+            type: [String],
+            default: [],
+        },
 
         status: {
             type: Boolean, // true or false
@@ -70,7 +79,9 @@ let productSchema = mongoose.Schema(
         slug: {
             type: String, // metal,plastic,wood
             minLength: [2, "product slug minimum length of slug is 2"],
-
+            required: [true, "product slug is required"],
+            lowercase: true,
+            trim: true,
         },
         order: {
             type: Number, // 1,2,3,4

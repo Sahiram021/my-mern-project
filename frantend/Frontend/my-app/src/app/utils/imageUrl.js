@@ -1,10 +1,17 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/web/";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://jgbmtrading.online/api/web/";
 
 export const PRODUCT_IMAGE_PLACEHOLDER = "/powder-images/jgb-anti-moisture-bag-25kg.jpg";
 
 export function getBackendUrl() {
-  const url = API_URL || "http://localhost:8000/web/";
-  return url.replace(/\/web\/?$/, "").replace(/\/$/, "");
+  const url = API_URL || "https://jgbmtrading.online/api/web/";
+  try {
+    return new URL(url).origin;
+  } catch {
+    return url
+      .replace(/\/api\/web\/?$/, "")
+      .replace(/\/web\/?$/, "")
+      .replace(/\/$/, "");
+  }
 }
 
 export function isCompleteImageUrl(src) {
@@ -18,11 +25,17 @@ export function buildProductImageUrl(image, baseUrl) {
     return PRODUCT_IMAGE_PLACEHOLDER;
   }
 
-  if (isCompleteImageUrl(imageName) || imageName.startsWith("/")) {
+  if (isCompleteImageUrl(imageName)) {
     return imageName;
   }
 
-  const backend = getBackendUrl() || "http://localhost:8000";
+  const backend = getBackendUrl() || "https://jgbmtrading.online";
+  if (imageName.startsWith("/uploads/")) {
+    return `${backend}${imageName}`;
+  }
+  if (imageName.startsWith("/")) {
+    return imageName;
+  }
   const imageBase = baseUrl || `${backend}/uploads/product/`;
 
   return `${imageBase.replace(/\/?$/, "/")}${imageName.replace(/^\//, "")}`;

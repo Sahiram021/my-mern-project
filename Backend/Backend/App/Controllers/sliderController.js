@@ -1,116 +1,155 @@
+const {
+  escapeRegex,
+  exactNameQuery,
+  getErrorDetails,
+  getUploadStaticPath,
+  isValidObjectId,
+  normalizeText,
+  toIdArray,
+  toNumber,
+} = require("../config/controllerUtils");
+const { removeUploadedFiles } = require("../config/upload");
 const sliderModel = require("../Models/sliderModel");
 
-let sliderCreate = async (req, res) => {
-  let { title, link, order } = req.body;
-  let obj = {
-    title,
-    link,
-    order,
-  };
+const getStaticPath = (req) =>
+  getUploadStaticPath(req, "slider", process.env.SLIDERIMAGEPATH);
+
+const sliderCreate = async (req, res) => {
+  const title = normalizeText(req.body.title);
+  const link = normalizeText(req.body.link);
 
   try {
-    let checkSlider = await sliderModel.findOne({ title });
-
-    if (checkSlider) {
-      res.send({
-        message: "Error in slider creation",
-        status: 0,
-        error: {
-          title: "Slider title already exist...",
-        },
-      });
-      return;
+    if (!title) {
+      removeUploadedFiles(req);
+      return res.status(400).send({ status: 0, message: "Slider title is required" });
+    }
+    if (!req.file?.filename) {
+      return res.status(400).send({ status: 0, message: "Slider image is required" });
     }
 
-    if (req.file?.filename) {
-      obj.image = req.file.filename;
+    const duplicate = await sliderModel.findOne(exactNameQuery(title));
+    if (duplicate) {
+      removeUploadedFiles(req);
+      return res.status(409).send({ status: 0, message: "Slider title already exists" });
     }
 
-    let sliderRes = await sliderModel.insertOne(obj);
-    res.send({
-      message: "Slider created successfully",
-      status: 1,
-      sliderRes,
+    const data = await sliderModel.create({
+      title,
+      link,
+      order: toNumber(req.body.order, 0),
+      image: req.file.filename,
     });
-  } catch (err) {
-    let error = {};
-    for (let errorKey in err.errors) {
-      error[errorKey] = err.errors[errorKey].message;
+    return res.status(201).send({ status: 1, message: "Slider created successfully", data });
+  } catch (error) {
+    removeUploadedFiles(req);
+    return res.status(400).send({ status: 0, message: "Error in slider creation", error: getErrorDetails(error) });
+  }
+};
+const sliderView = async (req, res) => {
+  try {
+    const filter = {};
+    const title = normalizeText(req.query.title);
+    if (title) filter.title = new RegExp(escapeRegex(title), "i");
+    if (req.query.order !== "" && req.query.order !== undefined) {
+      filter.order = toNumber(req.query.order, 0);
     }
-    res.send({ message: "Error in slider creation", status: 0, error });
+
+    const data = await sliderModel.find(filter).sort({ order: 1, date: -1 });
+    return res.send({ message: "Slider view", status: 1, staticPath: getStaticPath(req), data });
+  } catch (_error) {
+    return res.status(500).send({ status: 0, message: "Unable to fetch sliders" });
   }
 };
 
-let sliderView = async (req, res) => {
-  let { title, order } = req.query;
-  let orCondition = [];
-
-  if (title) {
-    orCondition.push({ title: new RegExp(title, "i") });
+const sliderDelete = async (req, res) => {
+  const { id } = req.params;
+  if (!isValidObjectId(id)) {
+    return res.status(400).send({ status: 0, message: "Invalid slider id" });
   }
-
-  if (order) {
-    orCondition.push({ order });
+  const delRes = await sliderModel.deleteOne({ _id: id });
+  if (!delRes.deletedCount) {
+    return res.status(404).send({ status: 0, message: "Slider not found" });
   }
-
-  let filter = {};
-  if (orCondition.length >= 1) {
-    filter.$or = orCondition;
-  }
-
-  let data = await sliderModel.find(filter);
-  let staticPath = process.env.SLIDERIMAGEPATH;
-  res.send({ message: "Slider View", status: 1, staticPath, data });
+  return res.send({ message: "Slider deleted successfully", status: 1, delRes });
 };
 
-let sliderDelete = async (req, res) => {
-  let { id } = req.params;
-  let delRes = await sliderModel.deleteOne({ _id: id });
-  res.send({ message: "Slider Delete", status: 1, delRes });
+const slidermultiDelete = async (req, res) => {
+  const ids = toIdArray(req.body.ids);
+  if (!ids.length || ids.some((id) => !isValidObjectId(id))) {
+    return res.status(400).send({ status: 0, message: "Valid slider ids are required" });
+  }
+  const delRes = await sliderModel.deleteMany({ _id: { $in: ids } });
+  return res.send({ message: "Sliders deleted successfully", status: 1, delRes });
 };
 
-let slidermultiDelete = async (req, res) => {
-  let { ids } = req.body;
-  let delRes = await sliderModel.deleteMany({ _id: ids });
-  res.send({ message: "Slider Delete", status: 1, delRes });
+const sliderEdit = async (req, res) => {
+  const { id } = req.params;
+  if (!isValidObjectId(id)) {
+    return res.status(400).send({ status: 0, message: "Invalid slider id" });
+  }
+  const data = await sliderModel.findById(id);
+  if (!data) {
+    return res.status(404).send({ status: 0, message: "Slider not found" });
+  }
+  return res.send({ message: "Slider edit", status: 1, staticPath: getStaticPath(req), data });
 };
 
-let sliderEdit = async (req, res) => {
-  let { id } = req.params;
-  let data = await sliderModel.findOne({ _id: id });
-  let staticPath = process.env.SLIDERIMAGEPATH;
-  res.send({ message: "Slider Edit", status: 1, staticPath, data });
-};
+const sliderUpdate = async (req, res) => {
+  const { id } = req.params;
+  const title = normalizeText(req.body.title);
 
-let sliderUpdate = async (req, res) => {
-  let { id } = req.params;
-  let { title, link, order } = req.body;
-  let obj = {
-    title,
-    link,
-    order,
-  };
-
-  if (req.file?.filename) {
-    obj.image = req.file.filename;
+  if (!isValidObjectId(id)) {
+    removeUploadedFiles(req);
+    return res.status(400).send({ status: 0, message: "Invalid slider id" });
+  }
+  if (!title) {
+    removeUploadedFiles(req);
+    return res.status(400).send({ status: 0, message: "Slider title is required" });
   }
 
-  let sliderRes = await sliderModel.updateOne({ _id: id }, { $set: obj });
-  res.send({ message: "Slider Update", status: 1, sliderRes });
+  try {
+    const duplicate = await sliderModel.findOne({
+      _id: { $ne: id },
+      ...exactNameQuery(title),
+    });
+    if (duplicate) {
+      removeUploadedFiles(req);
+      return res.status(409).send({ status: 0, message: "Slider title already exists" });
+    }
+
+    const update = {
+      title,
+      link: normalizeText(req.body.link),
+      order: toNumber(req.body.order, 0),
+    };
+    if (req.file?.filename) update.image = req.file.filename;
+
+    const data = await sliderModel.findByIdAndUpdate(id, update, {
+      new: true,
+      runValidators: true,
+    });
+    if (!data) {
+      removeUploadedFiles(req);
+      return res.status(404).send({ status: 0, message: "Slider not found" });
+    }
+    return res.send({ message: "Slider updated successfully", status: 1, data });
+  } catch (error) {
+    removeUploadedFiles(req);
+    return res.status(400).send({ status: 0, message: "Unable to update slider", error: getErrorDetails(error) });
+  }
 };
 
-let changeStatus = async (req, res) => {
-  let { ids } = req.body;
-
-  for (let id of ids) {
-    let oldSlider = await sliderModel.findOne({ _id: id });
-    await sliderModel.updateOne(
-      { _id: id },
-      { $set: { status: !oldSlider.status } }
-    );
+const changeStatus = async (req, res) => {
+  const ids = toIdArray(req.body.ids);
+  if (!ids.length || ids.some((id) => !isValidObjectId(id))) {
+    return res.status(400).send({ status: 0, message: "Valid slider ids are required" });
   }
 
-  res.send({ message: "Slider status changed successfully", status: 1 });
+  const rows = await sliderModel.find({ _id: { $in: ids } }).select("status");
+  await Promise.all(rows.map((row) =>
+    sliderModel.updateOne({ _id: row._id }, { $set: { status: !row.status } })
+  ));
+  return res.send({ message: "Slider status changed successfully", status: 1 });
 };
 
 module.exports = {

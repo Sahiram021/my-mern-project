@@ -2,10 +2,12 @@ import axios from "axios";
 import { useEffect, useState } from "react";
 import { FaFilter, FaMagnifyingGlass, FaPenToSquare, FaRotate } from "react-icons/fa6";
 import { Link } from "react-router";
-import { showSuccess, showWarning } from "../../common/notification/notification";
+import { showError, showSuccess, showWarning } from "../../common/notification/notification";
 import { confirmDelete } from "../../common/sweetAlert/deleteConfirm";
+import { getApiErrorMessage } from "../../../../api/errors";
+import ImagePathPreview from "../../common/ImagePathPreview";
 
-const apiBaseUrl = import.meta.env.VITE_APIBASEPATH;
+const apiBaseUrl = import.meta.env.VITE_APIBASEPATH || "http://127.0.0.1:8000/api/admin/";
 
 export default function ViewSliders() {
   const [data, setData] = useState([]);
@@ -30,8 +32,11 @@ export default function ViewSliders() {
         if (finalRes.status) {
           setData(finalRes.data);
           setImagePath(finalRes.staticPath);
+        } else {
+          showError(finalRes.message || "Unable to load sliders");
         }
-      });
+      })
+      .catch((error) => showError(getApiErrorMessage(error, "Unable to load sliders")));
   };
 
   useEffect(() => {
@@ -149,13 +154,14 @@ export default function ViewSliders() {
               </tr>
             </thead>
             <tbody>
-              {data.length >= 1 ? data.map((obj, index) => (
+              {data.length >= 1 ? data.map((obj, index) => {
+                return (
                 <tr key={obj._id} className="border-b bg-white">
                   <td className="px-2 py-4"><input type="checkbox" value={obj._id} checked={ids.includes(obj._id)} onChange={getCheckValue} className="h-4 w-4 cursor-pointer" /></td>
                   <td className="px-2 py-4">{index + 1}</td>
                   <td className="px-2 py-4">{obj.title}</td>
                   <td className="px-2 py-4">
-                    <img src={imagePath + obj.image} alt={obj.title} className="mx-auto h-16 w-28 rounded object-cover" />
+                    <ImagePathPreview basePath={imagePath} filename={obj.image} alt={`${obj.title || "Slider"} banner`} imageClassName="mx-auto h-16 w-28 rounded border border-slate-200 object-cover" />
                   </td>
                   <td className="max-w-[220px] truncate px-2 py-4">{obj.link}</td>
                   <td className="px-2 py-4">{obj.order}</td>
@@ -166,7 +172,8 @@ export default function ViewSliders() {
                     </Link>
                   </td>
                 </tr>
-              )) : (
+                );
+              }) : (
                 <tr><td colSpan="8" className="border-t p-6 text-center text-gray-500">No slider found</td></tr>
               )}
             </tbody>

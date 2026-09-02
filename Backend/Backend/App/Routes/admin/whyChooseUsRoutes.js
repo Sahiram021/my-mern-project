@@ -1,5 +1,5 @@
 let express = require("express");
-const multer = require("multer");
+const { createImageUpload } = require("../../config/upload");
 const {
   whyChooseUsCreate,
   whyChooseUsView,
@@ -12,16 +12,7 @@ const {
 
 let whyChooseUsRoutes = express.Router();
 
-let storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, "uploads/whychooseus");
-  },
-  filename: (req, file, cb) => {
-    cb(null, Date.now() + file.originalname);
-  },
-});
-
-const upload = multer({ storage });
+const upload = createImageUpload("whychooseus", { maxCount: 1 });
 
 whyChooseUsRoutes.post("/create", upload.single("image"), whyChooseUsCreate);
 whyChooseUsRoutes.get("/view", whyChooseUsView);

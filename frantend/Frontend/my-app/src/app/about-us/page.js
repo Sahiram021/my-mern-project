@@ -15,9 +15,16 @@ import {
 } from "react-icons/fa";
 
 export const metadata = {
-  title: "About Us | JGB TRADING PRIVATE LIMITED",
+  title: "About JGB Trading",
   description:
     "JGB Trading Private Limited is a trusted name in the mineral industry, committed to delivering high quality mineral powders across India.",
+  alternates: { canonical: "/about-us" },
+  openGraph: {
+    url: "/about-us",
+    title: "About JGB Trading Private Limited",
+    description:
+      "Learn about JGB Trading's mineral powder supply, quality standards and operations in Raipur, Chhattisgarh.",
+  },
 };
 
 export default function AboutUsPage() {

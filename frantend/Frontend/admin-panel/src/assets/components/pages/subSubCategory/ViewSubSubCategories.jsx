@@ -4,8 +4,9 @@ import { useEffect } from 'react'
 import { useState } from 'react'
 import { FaFilter, FaMagnifyingGlass, FaPenToSquare, FaRotate } from 'react-icons/fa6'
 import { Link } from 'react-router'
-import { showSuccess, showWarning } from '../../common/notification/notification'
+import { showError, showSuccess, showWarning } from '../../common/notification/notification'
 import { confirmDelete } from '../../common/sweetAlert/deleteConfirm'
+import ImagePathPreview from '../../common/ImagePathPreview'
 
 export default function ViewSubSubCategories() {
   const [data,setData]=useState([])
@@ -33,6 +34,7 @@ export default function ViewSubSubCategories() {
           setImagePath(finalRes.staticPath)
         }
       })
+      .catch((error)=>showError(error.response?.data?.message || 'Unable to load sub-subcategories'))
     },[apiBaseUrl,searchName,searchSlug,searchOrder])
   
     useEffect(()=>{
@@ -71,6 +73,7 @@ export default function ViewSubSubCategories() {
             setIds([])
           }
         })
+        .catch((error)=>showError(error.response?.data?.message || 'Unable to delete sub-subcategories'))
       }else{
         showWarning('Please select at least one sub sub category')
       }
@@ -88,6 +91,7 @@ export default function ViewSubSubCategories() {
             setIds([])
           }
         })
+        .catch((error)=>showError(error.response?.data?.message || 'Unable to change sub-subcategory status'))
       }else{
         showWarning('Please select at least one sub sub category')
       }
@@ -167,7 +171,7 @@ export default function ViewSubSubCategories() {
 
               <td className='px-2 py-4'>{obj.slug}</td>
               <td className='px-2 py-4'>
-                <img src={imagePath+obj.image} alt={obj.name} className='w-16 h-16 mx-auto rounded object-cover' />
+                <ImagePathPreview basePath={imagePath} filename={obj.image} alt={obj.name} />
               </td>
               <td className='px-2 py-4'>{obj.order}</td>
               <td className={`px-2 py-4 font-semibold ${obj.status ? 'text-green-600' : 'text-red-600'}`}>{obj.status ? 'Active' : 'Deactive'}</td>

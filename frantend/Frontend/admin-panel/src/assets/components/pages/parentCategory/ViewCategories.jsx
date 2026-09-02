@@ -2,8 +2,9 @@ import axios from 'axios';
 import { useEffect, useState } from 'react'
 import { FaFilter, FaMagnifyingGlass, FaPenToSquare, FaRotate } from 'react-icons/fa6'
 import { Link } from 'react-router'
-import { showSuccess, showWarning } from '../../common/notification/notification'
+import { showError, showSuccess, showWarning } from '../../common/notification/notification'
 import { confirmDelete } from '../../common/sweetAlert/deleteConfirm'
+import ImagePathPreview from '../../common/ImagePathPreview'
 
 const apiBaseUrl=import.meta.env.VITE_APIBASEPATH
 
@@ -30,6 +31,7 @@ export default function ViewCategories() {
         setImagePath(finalRes.staticPath)
       }
     })
+    .catch((error)=>showError(error.response?.data?.message || 'Unable to load categories'))
   }
 
   useEffect(()=>{
@@ -68,6 +70,7 @@ export default function ViewCategories() {
           setIds([])
         }
       })
+      .catch((error)=>showError(error.response?.data?.message || 'Unable to delete categories'))
     }else{
       showWarning('Please select at least one category')
     }
@@ -85,6 +88,7 @@ export default function ViewCategories() {
           setIds([])
         }
       })
+      .catch((error)=>showError(error.response?.data?.message || 'Unable to change category status'))
     }else{
       showWarning('Please select at least one category')
     }
@@ -153,7 +157,7 @@ export default function ViewCategories() {
                   <td className='px-2 py-4'>{index+1}</td>
                   <td className='px-2 py-4'>{obj.name}</td>
                   <td className='px-2 py-4'>
-                    <img src={imagePath+obj.image} alt={obj.name} className='w-16 h-16 mx-auto rounded object-cover' />
+                    <ImagePathPreview basePath={imagePath} filename={obj.image} alt={obj.name} />
                   </td>
                   <td className='px-2 py-4'>{obj.order}</td>
                   <td className={`px-2 py-4 font-semibold ${obj.status ? 'text-green-600' : 'text-red-600'}`}>{obj.status ? 'Active' : 'Deactive'}</td>

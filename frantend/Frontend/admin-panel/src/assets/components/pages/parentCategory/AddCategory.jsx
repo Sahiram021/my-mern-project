@@ -3,26 +3,25 @@ import { FaRegImage } from 'react-icons/fa6'
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router'
 import { showError, showSuccess } from '../../common/notification/notification'
+import { getApiErrorMessage } from '../../../../api/errors'
 
 export default function AddCategory() {
   let [imagePreview,setImagePreview]=useState('')
   let [editData,setEditData]=useState(null)
-  let apiBaseUrl=import.meta.env.VITE_APIBASEPATH
+  let [isSaving,setIsSaving]=useState(false)
+  let apiBaseUrl=import.meta.env.VITE_APIBASEPATH || 'http://localhost:8000/api/admin/'
   let {id}=useParams()
   let navigate=useNavigate()
 
   let saveCategory=(e)=>{
     e.preventDefault()
+    setIsSaving(true)
     let apiRequest
 
+    let formData=new FormData(e.target)
     if(id){
-      let obj={
-        name:e.target.name.value,
-        order:e.target.order.value
-      }
-      apiRequest=axios.put(`${apiBaseUrl}category/update/${id}`,obj)
+      apiRequest=axios.put(`${apiBaseUrl}category/update/${id}`,formData)
     }else{
-      let formData=new FormData(e.target)
       apiRequest=axios.post(`${apiBaseUrl}category/create`,formData)
     }
 
@@ -34,12 +33,13 @@ export default function AddCategory() {
         showSuccess(finalRes.message)
         navigate('/category/view')
       }else{
-        showError(finalRes.error || finalRes.message)
+        showError(getApiErrorMessage({ response: { data: finalRes } }, 'Category could not be saved'))
       }
     })
     .catch((error)=>{
-      showError(error.response?.data?.message || 'Category save nahi hui')
+      showError(getApiErrorMessage(error, 'Category could not be saved'))
     })
+    .finally(()=>setIsSaving(false))
   }
 
   let previewImage=(e)=>{
@@ -52,11 +52,14 @@ export default function AddCategory() {
 
   useEffect(()=>{
     if(id){
-      axios.put(`${apiBaseUrl}category/get-detail/${id}`)
+      axios.get(`${apiBaseUrl}category/get-detail/${id}`)
       .then((res)=>res.data)
       .then((finalRes)=>{
         if(finalRes.status){
           setEditData(finalRes.data)
+          if(finalRes.data?.image){
+            setImagePreview(`${finalRes.staticPath}${finalRes.data.image}`)
+          }
         }
       })
     }
@@ -83,21 +86,21 @@ export default function AddCategory() {
                 </div>
               </div>
               }
-              <input onChange={previewImage} name='image' accept='image/*' className='absolute z-10 inset-0 opacity-0 cursor-pointer' type='file' />
+              <input onChange={previewImage} name='image' accept='image/*' className='absolute z-10 inset-0 opacity-0 cursor-pointer' type='file' required={!id} />
             </div>
           </div>
           <div className='basis-full'>
             <div className='mb-6'>
               <label className='block mb-2 text-md font-medium text-gray-700'>Category Name</label>
-              <input type='text' name='name' defaultValue={editData?.name} autoComplete='off' className='text-[17px] border border-slate-300 text-gray-900 rounded-lg focus:ring-2 focus:ring-indigo-400 focus:border-indigo-500 block w-full py-2.5 px-3' placeholder='Enter category name' />
+              <input type='text' name='name' defaultValue={editData?.name} autoComplete='off' required minLength='2' className='text-[17px] border border-slate-300 text-gray-900 rounded-lg focus:ring-2 focus:ring-indigo-400 focus:border-indigo-500 block w-full py-2.5 px-3' placeholder='Enter category name' />
             </div>
             <div className='mb-6'>
               <label className='block mb-2 text-md font-medium text-gray-700'>Order</label>
-              <input type='number' name='order' defaultValue={editData?.order} min='1' autoComplete='off' className='text-[17px] border border-slate-300 text-gray-900 rounded-lg focus:ring-2 focus:ring-indigo-400 focus:border-indigo-500 block w-full py-2.5 px-3' placeholder='Enter order number' />
+              <input type='number' name='order' defaultValue={editData?.order ?? 0} min='0' autoComplete='off' className='text-[17px] border border-slate-300 text-gray-900 rounded-lg focus:ring-2 focus:ring-indigo-400 focus:border-indigo-500 block w-full py-2.5 px-3' placeholder='Enter order number' />
             </div>
             <div className='flex justify-end'>
-              <button type='submit' className='mt-3 cursor-pointer text-white bg-indigo-600 hover:bg-indigo-700 focus:ring-4 focus:ring-indigo-300 font-medium rounded-lg text-md px-6 py-2.5 shadow-sm transition-all'>
-                {id ? 'Update' : 'Submit'}
+              <button type='submit' disabled={isSaving} className='mt-3 cursor-pointer text-white bg-indigo-600 hover:bg-indigo-700 focus:ring-4 focus:ring-indigo-300 font-medium rounded-lg text-md px-6 py-2.5 shadow-sm transition-all disabled:cursor-not-allowed disabled:bg-slate-400'>
+                {isSaving ? 'Saving...' : id ? 'Update' : 'Submit'}
               </button>
             </div>
           </div>

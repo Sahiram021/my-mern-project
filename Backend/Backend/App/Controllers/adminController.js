@@ -7,26 +7,38 @@ const saltRounds = 10;
 let login = async (req, res) => {
     try {
         let { email, password } = req.body;
-        let checkEmailInDB = await adminModel.findOne({ email: email });
+        email = String(email || "").trim().toLowerCase();
+        if (!email || !password) {
+            return res.status(400).send({ status: 0, message: "Email and password are required" });
+        }
+
+        let checkEmailInDB = await adminModel.findOne({ email }).select("+password");
         if (checkEmailInDB) {
             let dbPassword = checkEmailInDB.password;
             let checkPassword = await bcrypt.compare(password, dbPassword);
             if (checkPassword) {
-                let token = jwt.sign({ id: checkEmailInDB._id }, process.env.TOKENKEY || "12345");
-                res.send({
+                let token = jwt.sign(
+                    { id: checkEmailInDB._id },
+                    process.env.TOKENKEY,
+                    { expiresIn: "12h" }
+                );
+                const adminData = checkEmailInDB.toObject();
+                delete adminData.password;
+                delete adminData.__v;
+                return res.send({
                     status: 1,
                     message: "Login successfully",
-                    data: checkEmailInDB,
+                    data: adminData,
                     token
                 });
             } else {
-                res.send({ status: 0, message: "Password is incorrect" });
+                return res.status(401).send({ status: 0, message: "Password is incorrect" });
             }
         } else {
-            res.send({ status: 0, message: "Email not found" });
+            return res.status(401).send({ status: 0, message: "Email not found" });
         }
     } catch (err) {
-        res.send({ status: 0, message: "Login error", error: err.message });
+        return res.status(500).send({ status: 0, message: "Login error" });
     }
 };
 
@@ -35,7 +47,11 @@ let adforgotPassword = async (req, res) => {
         let { email } = req.body;
         let emailCheck = await adminModel.findOne({ email });
         if (emailCheck) {
-            let resetToken = jwt.sign({ id: emailCheck._id }, process.env.TOKENKEY || "12345");
+            let resetToken = jwt.sign(
+                { id: emailCheck._id, purpose: "admin-password-reset" },
+                process.env.TOKENKEY,
+                { expiresIn: "15m" }
+            );
             let adminAppUrl = process.env.ADMINAPPURL || process.env.APPURL || "http://localhost:5173";
             let resetUrl = `${adminAppUrl}/reset-password/${emailCheck._id}?token=${resetToken}`;
 
@@ -66,20 +82,33 @@ let adforgotPassword = async (req, res) => {
 let adresetPassword = async (req, res) => {
     try {
         let { id } = req.params;
-        let { newPassword, confirmPassword } = req.body;
+        let { newPassword, confirmPassword, token } = req.body;
+
+        if (!token) {
+            return res.status(401).send({ status: 0, message: "Password reset token is required" });
+        }
+
+        const decoded = jwt.verify(token, process.env.TOKENKEY);
+        if (decoded.id !== id || decoded.purpose !== "admin-password-reset") {
+            return res.status(401).send({ status: 0, message: "Password reset link is invalid" });
+        }
+
+        if (String(newPassword || "").length < 8) {
+            return res.status(400).send({ status: 0, message: "Password must be at least 8 characters" });
+        }
 
         if (newPassword === confirmPassword) {
-            let hashPassword = bcrypt.hashSync(newPassword, saltRounds);
+            let hashPassword = await bcrypt.hash(newPassword, saltRounds);
             await adminModel.updateOne(
                 { _id: id },
                 { $set: { password: hashPassword } }
             );
-            res.send({ status: 1, message: "Password changed successfully" });
+            return res.send({ status: 1, message: "Password changed successfully" });
         } else {
-            res.send({ status: 0, message: "New password and confirm Password do not match" });
+            return res.status(400).send({ status: 0, message: "New password and confirm Password do not match" });
         }
     } catch (err) {
-        res.send({ status: 0, message: "Error resetting password", error: err.message });
+        return res.status(401).send({ status: 0, message: "Password reset link is invalid or expired" });
     }
 };
 
@@ -90,7 +119,7 @@ let adupdateProfile = async (req, res) => {
         if (!authHeader) return res.send({ status: 0, message: "Authorization token required" });
 
         let token = authHeader.split(" ")[1] || authHeader;
-        let decoded = jwt.verify(token, process.env.TOKENKEY || "12345");
+        let decoded = jwt.verify(token, process.env.TOKENKEY);
         let { id } = decoded;
 
         let updateObj = {
@@ -121,10 +150,10 @@ let adgetProfile = async (req, res) => {
         if (!authHeader) return res.send({ status: 0, message: "Authorization token required" });
 
         let token = authHeader.split(" ")[1] || authHeader;
-        let decoded = jwt.verify(token, process.env.TOKENKEY || "12345");
+        let decoded = jwt.verify(token, process.env.TOKENKEY);
         let { id } = decoded;
 
-        let adminData = await adminModel.findOne({ _id: id });
+        let adminData = await adminModel.findOne({ _id: id }).select("-password");
         if (!adminData) {
             res.send({ status: 0, message: "Admin not found" });
         } else {

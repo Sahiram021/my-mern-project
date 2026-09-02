@@ -1,14 +1,15 @@
+const categoryModel = require("../../Models/categoryModel");
 const productModel = require("../../Models/productModel");
 const subcategoryModel = require("../../Models/subcategoryModel");
 const subSubcategoryModel = require("../../Models/subSubcategoryModel");
+const { getUploadStaticPath } = require("../../config/controllerUtils");
 
-// ======================================================
-// GET PRODUCTS BY CATEGORY / SUBCATEGORY / SUBSUBCATEGORY
-// ======================================================
+const getProductImagePath = (req) =>
+  getUploadStaticPath(req, "product", process.env.PRODUCTIMAGEPATH);
 
 const getCategoryProducts = async (req, res) => {
   try {
-    const { slug } = req.params;
+    const slug = String(req.params.slug || "").trim().toLowerCase();
 
     if (!slug) {
       return res.status(400).json({
@@ -17,117 +18,58 @@ const getCategoryProducts = async (req, res) => {
       });
     }
 
-    console.log("Category slug:", slug);
+    const hierarchy = [
+      {
+        kind: "subsubcategory",
+        model: subSubcategoryModel,
+        productField: "subsubcategory",
+      },
+      {
+        kind: "subcategory",
+        model: subcategoryModel,
+        productField: "subcategory",
+      },
+      {
+        kind: "category",
+        model: categoryModel,
+        productField: "parentCategory",
+      },
+    ];
 
-    // ==================================================
-    // 1. FIRST CHECK SUB-SUB-CATEGORY
-    // Example:
-    // sliding-wardrobes
-    // ==================================================
-
-    const subSubcategory = await subSubcategoryModel.findOne({
-      slug: slug,
-      status: true,
-    });
-
-    if (subSubcategory) {
-      console.log(
-        "SubSubcategory Found:",
-        subSubcategory.name,
-        subSubcategory._id
-      );
+    for (const level of hierarchy) {
+      const category = await level.model.findOne({ slug, status: true });
+      if (!category) continue;
 
       const products = await productModel
-        .find({
-          subsubcategory: subSubcategory._id,
-          status: true,
-        })
-        .sort({ order: 1, _id: -1 });
-
-      let staticPath = process.env.PRODUCTIMAGEPATH  
+        .find({ [level.productField]: category._id, status: true })
+        .sort({ order: 1, createdAt: -1 });
 
       return res.status(200).json({
         status: true,
-        message: "Sub-subcategory products fetched successfully",
-
+        message: "Category products fetched successfully",
+        kind: level.kind,
         category: {
-          _id: subSubcategory._id,
-          name: subSubcategory.name,
-          slug: subSubcategory.slug,
+          _id: category._id,
+          name: category.name,
+          slug: category.slug,
         },
-        base_url :staticPath ,
-
+        base_url: getProductImagePath(req),
         total: products.length,
         products,
       });
     }
-
-    // ==================================================
-    // 2. CHECK SUBCATEGORY
-    // Example:
-    // bedroom-wardrobes
-    // ==================================================
-
-    const subcategory = await subcategoryModel.findOne({
-      slug: slug,
-      status: true,
-    });
-
-    if (subcategory) {
-      console.log(
-        "Subcategory Found:",
-        subcategory.name,
-        subcategory._id
-      );
-
-      const products = await productModel
-        .find({
-          subcategory: subcategory._id,
-          status: true,
-        })
-        .sort({ order: 1, _id: -1 });
-
-              let staticPath = process.env.PRODUCTIMAGEPATH  
-
-      return res.status(200).json({
-        status: true,
-        message: "Subcategory products fetched successfully",
-
-        category: {
-          _id: subcategory._id,
-          name: subcategory.name,
-          slug: subcategory.slug,
-        },
-        base_url :staticPath ,
-
-        total: products.length,
-        products,
-      });
-    }
-
-    // ==================================================
-    // 3. CATEGORY
-    // Parent category me slug nahi hai
-    // isliye name se check karenge
-    // ==================================================
 
     return res.status(404).json({
       status: false,
-      message: `Category not found for slug: ${slug}`,
+      message: "Category not found",
       products: [],
     });
-
-  } catch (error) {
-    console.error("Get Category Products Error:", error);
-
+  } catch (_error) {
     return res.status(500).json({
       status: false,
       message: "Failed to fetch category products",
-      error: error.message,
     });
   }
 };
 
-module.exports = {
-  getCategoryProducts,
-};
+module.exports = { getCategoryProducts };

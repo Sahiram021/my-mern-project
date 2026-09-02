@@ -1,4 +1,5 @@
 const whyChooseUsModel = require("../Models/whyChooseUsModel");
+const { getUploadStaticPath } = require("../config/controllerUtils");
 
 let whyChooseUsCreate = async (req, res) => {
   let { title, description, order, rating } = req.body;
@@ -60,7 +61,7 @@ let whyChooseUsView = async (req, res) => {
   }
 
   let data = await whyChooseUsModel.find(filter);
-  let staticPath = process.env.WHYCHOOSEUSIMAGEPATH;
+  let staticPath = getUploadStaticPath(req, "whychooseus", process.env.WHYCHOOSEUSIMAGEPATH);
   res.send({ message: "whyChooseUs View", status: 1, staticPath, data });
 };
 
@@ -79,7 +80,7 @@ let whyChooseUsmultiDelete = async (req, res) => {
 let whyChooseUsEdit = async (req, res) => {
   let { id } = req.params;
   let data = await whyChooseUsModel.findOne({ _id: id });
-  let staticPath = process.env.WHYCHOOSEUSIMAGEPATH;
+  let staticPath = getUploadStaticPath(req, "whychooseus", process.env.WHYCHOOSEUSIMAGEPATH);
   res.send({ message: "whyChooseUs Edit", status: 1, staticPath, data });
 };
 

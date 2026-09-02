@@ -3,12 +3,13 @@ import { useEffect, useState } from "react";
 import { FaRegImage } from "react-icons/fa6";
 import { useNavigate, useParams } from "react-router";
 import { showError, showSuccess } from "../../common/notification/notification";
+import { getApiErrorMessage } from "../../../../api/errors";
 
 export default function AddSlider() {
   let [imagePreview, setImagePreview] = useState("");
   let [editData, setEditData] = useState(null);
   let [error, setError] = useState(null);
-  let apiBaseUrl = import.meta.env.VITE_APIBASEPATH;
+  let apiBaseUrl = import.meta.env.VITE_APIBASEPATH || 'http://localhost:8000/api/admin/';
   let { id } = useParams();
   let navigate = useNavigate();
 
@@ -32,11 +33,11 @@ export default function AddSlider() {
           navigate("/sliders/view");
         } else {
           setError(finalRes.error);
-          showError(finalRes.error || finalRes.message);
+          showError(getApiErrorMessage({ response: { data: finalRes } }, "Slider could not be saved"));
         }
       })
       .catch((error) => {
-        showError(error.response?.data?.message || "Slider save nahi hua");
+        showError(getApiErrorMessage(error, "Slider could not be saved"));
       });
   };
 
@@ -114,6 +115,8 @@ export default function AddSlider() {
               <input
                 type="text"
                 name="title"
+                required
+                minLength="2"
                 defaultValue={editData?.title}
                 autoComplete="off"
                 className="block w-full rounded-lg border border-slate-300 px-3 py-2.5 text-[17px] text-gray-900 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-400"
@@ -143,8 +146,8 @@ export default function AddSlider() {
               <input
                 type="number"
                 name="order"
-                defaultValue={editData?.order}
-                min="1"
+                min="0"
+                defaultValue={editData?.order ?? 0}
                 autoComplete="off"
                 className="block w-full rounded-lg border border-slate-300 px-3 py-2.5 text-[17px] text-gray-900 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-400"
                 placeholder="Enter order number"

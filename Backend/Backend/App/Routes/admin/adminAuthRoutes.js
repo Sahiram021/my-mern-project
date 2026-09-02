@@ -1,19 +1,9 @@
 let express = require('express');
 const { login, adforgotPassword, adresetPassword, adgetProfile, adupdateProfile } = require('../../Controllers/adminController');
 let adminAuthRoutes = express.Router();
-const multer  = require('multer')
+const { createImageUpload } = require('../../config/upload')
 
-let storage = multer.diskStorage({
-    destination:(req,file,cb)=>{
-        cb(null, 'uploads/admin')
-    },
-    filename:(req,file,cb)=>{
-        cb(null,  Date.now()+ file.originalname)
-    }
-})
-
-
-const upload = multer({storage:storage})
+const upload = createImageUpload("admin", { maxCount: 1 })
 
 
 

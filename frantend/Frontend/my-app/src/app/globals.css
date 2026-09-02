@@ -1,5 +1,55 @@
 @import "tailwindcss";
 
+.hero-slider-main {
+  width: 100%;
+  overflow: hidden;
+}
+
+.hero-slider-main .swiper-slide {
+  height: auto;
+  pointer-events: none;
+}
+
+.hero-slider-main .swiper-slide-active {
+  pointer-events: auto;
+}
+
+.hero-slider-main .swiper-pagination {
+  bottom: 18px !important;
+  z-index: 25;
+}
+
+.hero-slider-main .swiper-pagination-bullet {
+  width: 10px;
+  height: 10px;
+  margin: 0 6px !important;
+  background: rgba(255, 255, 255, 0.65);
+  opacity: 1;
+  transition: width 200ms ease, background-color 200ms ease;
+}
+
+.hero-slider-main .swiper-pagination-bullet-active {
+  width: 30px;
+  border-radius: 999px;
+  background: #f97316;
+}
+
+@media (max-width: 639px) {
+  .hero-slider-main .swiper-pagination {
+    bottom: 8px !important;
+  }
+
+  .hero-slider-main .swiper-pagination-bullet {
+    width: 8px;
+    height: 8px;
+    margin: 0 4px !important;
+  }
+
+  .hero-slider-main .swiper-pagination-bullet-active {
+    width: 22px;
+  }
+}
+
 .home-banner-swiper {
   width: 100%;
   overflow: hidden;
@@ -141,4 +191,3 @@
   background: #0b4ba2;
   border-color: #0b4ba2;
 }
-

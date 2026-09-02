@@ -16,6 +16,7 @@ import {
   fetchWishlist,
   removeFromWishlist,
 } from "@/app/slice/wishlistSlice";
+import { buildProductImageUrl } from "@/app/utils/imageUrl";
 
 const tabs = [
   ["featured", "Featured"],
@@ -239,7 +240,7 @@ export default function NewArrivalsSection({ path, data = [] }) {
 }
 
 function ProductCardDiv({ path, productData }) {
-  const apibaseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/web/";
+  const apibaseUrl = process.env.NEXT_PUBLIC_API_URL || "https://jgbmtrading.online/api/web/";
   const [wishlistLoading, setWishlistLoading] = useState(false);
   const dispatch = useDispatch();
   const token = useSelector((state) => state.userStore.token);
@@ -252,12 +253,8 @@ function ProductCardDiv({ path, productData }) {
   );
   const isWishlisted = Boolean(wishlistItem);
 
-  const backend = "http://localhost:8000";
-  const basePath = path || `${backend}/uploads/product/`;
   const rawImage = productData?.image || "";
-  const productImage = rawImage.startsWith("http") || rawImage.startsWith("/")
-    ? rawImage
-    : `${basePath.replace(/\/?$/, "/")}${rawImage.replace(/^\//, "")}`;
+  const productImage = buildProductImageUrl(rawImage, path);
 
   const productCategory =
     productData?.parentCategory?.name ||

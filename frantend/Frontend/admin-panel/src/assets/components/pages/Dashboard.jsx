@@ -51,7 +51,7 @@ export default function Dashboard() {
           axios.get(`${apiBaseUrl}material/view`),
           axios.get(`${apiBaseUrl}color/view`),
           axios.get(`${apiBaseUrl}slider/view`),
-          axios.get(`${apiBaseUrl}orders/view`),
+          axios.get(`${apiBaseUrl}order/view`),
         ])
 
         const prodData = prodRes.status === 'fulfilled' ? prodRes.value.data?.data || [] : []

@@ -52,7 +52,11 @@ export default function OrderDetailsPage() {
     }
 
     if (orderId) {
-      fetchOrderDetails();
+      const timer = window.setTimeout(() => {
+        void fetchOrderDetails();
+      }, 0);
+
+      return () => window.clearTimeout(timer);
     }
   }, [token, orderId, router, fetchOrderDetails]);
 

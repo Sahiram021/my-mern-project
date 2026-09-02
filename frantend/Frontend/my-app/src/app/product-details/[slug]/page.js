@@ -1,3 +1,4 @@
+import { cache } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
@@ -13,16 +14,27 @@ import ProductActions from "../../Components/Product-Components/ProductActions";
 import { buildProductImageUrl } from "../../utils/imageUrl";
 import { products as fallbackProducts } from "../../data/products";
 
-const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/web/";
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://jgbmtrading.online";
+const apiBaseUrl = (
+  process.env.NEXT_PUBLIC_API_URL || "https://jgbmtrading.online/api/web/"
+).replace(/\/?$/, "/");
 
-async function getProduct(slug) {
-  const decodedSlug = decodeURIComponent(slug || "").toLowerCase().trim();
+export const dynamic = "force-static";
+export const dynamicParams = true;
+export const revalidate = 300;
+
+export function generateStaticParams() {
+  return fallbackProducts.map((product) => ({ slug: product.slug }));
+}
+
+const getProduct = cache(async (slug) => {
+  const decodedSlug = String(slug || "").toLowerCase().trim();
   const normalizedSlug = decodedSlug.replace(/[^a-z0-9]/g, "");
 
   try {
     const response = await fetch(
       `${apiBaseUrl}products/${encodeURIComponent(slug)}`,
-      { cache: "no-store" }
+      { next: { revalidate: 300 } }
     );
 
     if (response.ok) {
@@ -35,22 +47,7 @@ async function getProduct(slug) {
     console.log("Product Details API:", error?.message);
   }
 
-  try {
-    const response2 = await fetch(
-      `${apiBaseUrl}products/details/${encodeURIComponent(slug)}`,
-      { cache: "no-store" }
-    );
-
-    if (response2.ok) {
-      const data = await response2.json();
-      if (data.success && data.product) {
-        return data.product;
-      }
-    }
-  } catch (error) {
-  }
-
-  // Robust matching by slug and product name
+  // Use an exact local catalog match when the API is unavailable.
   const found = fallbackProducts.find((p) => {
     const pSlug = (p.slug || "").toLowerCase().trim();
     const pSlugNorm = pSlug.replace(/[^a-z0-9]/g, "");
@@ -61,32 +58,41 @@ async function getProduct(slug) {
       pSlug === decodedSlug ||
       pSlugNorm === normalizedSlug ||
       pNameNorm === normalizedSlug ||
-      pTitleNorm === normalizedSlug ||
-      pNameNorm.includes(normalizedSlug) ||
-      normalizedSlug.includes(pNameNorm) ||
-      pTitleNorm.includes(normalizedSlug) ||
-      normalizedSlug.includes(pTitleNorm)
+      pTitleNorm === normalizedSlug
     );
   });
 
-  return found || fallbackProducts[0];
-}
+  return found || null;
+});
 
 export async function generateMetadata({ params }) {
   const { slug } = await params;
   const product = await getProduct(slug);
 
   if (!product) {
-    return { title: "Product Not Found | JGB Trading" };
+    notFound();
   }
 
+  const name = product.name || product.title;
+  const description =
+    product.shortDescription ||
+    product.sortDescription ||
+    product.longDescription ||
+    "High quality mineral and calcium powder supplied from Raipur, Chhattisgarh.";
+  const canonicalPath = `/product-details/${encodeURIComponent(slug)}`;
+  const image = new URL(buildProductImageUrl(product.image), siteUrl).toString();
+
   return {
-    title: `${product.name || product.title} | JGB TRADING PRIVATE LIMITED`,
-    description:
-      product.shortDescription ||
-      product.sortDescription ||
-      product.longDescription ||
-      "High quality mineral and calcium powder supplier in Raipur, Chhattisgarh.",
+    title: name,
+    description,
+    alternates: { canonical: canonicalPath },
+    openGraph: {
+      type: "website",
+      url: canonicalPath,
+      title: `${name} | JGB Trading`,
+      description,
+      images: [{ url: image, alt: name }],
+    },
   };
 }
 
@@ -99,6 +105,43 @@ export default async function ProductDetailsPage({ params }) {
   }
 
   const productImage = buildProductImageUrl(product.image);
+  const productName = product.name || product.title;
+  const canonicalUrl = `${siteUrl}/product-details/${encodeURIComponent(slug)}`;
+  const absoluteProductImage = new URL(productImage, siteUrl).toString();
+  const numericPrice = Number(product.price);
+  const productSchema = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: productName,
+    image: [absoluteProductImage],
+    description:
+      product.shortDescription ||
+      product.sortDescription ||
+      product.longDescription ||
+      `${productName} supplied by JGB Trading Private Limited.`,
+    sku: String(product.sku || product._id || product.slug || slug),
+    category:
+      product.parentCategory?.name || product.category?.name || product.category,
+    brand: {
+      "@type": "Brand",
+      name: "JGB Trading Private Limited",
+    },
+    ...(Number.isFinite(numericPrice) && numericPrice > 0
+      ? {
+          offers: {
+            "@type": "Offer",
+            url: canonicalUrl,
+            priceCurrency: "INR",
+            price: numericPrice,
+            availability:
+              product.inStock === false
+                ? "https://schema.org/OutOfStock"
+                : "https://schema.org/InStock",
+            itemCondition: "https://schema.org/NewCondition",
+          },
+        }
+      : {}),
+  };
   const productForActions = {
     ...product,
     image: productImage,
@@ -110,6 +153,12 @@ export default async function ProductDetailsPage({ params }) {
 
   return (
     <main className="min-h-screen bg-[#fafbfc] text-[#0f2b5c]">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(productSchema).replace(/</g, "\\u003c"),
+        }}
+      />
       {/* BREADCRUMB */}
       <section className="border-b border-slate-200 bg-white py-4 text-xs font-semibold uppercase tracking-wider text-slate-500">
         <div className="mx-auto flex max-w-7xl items-center gap-2 px-4 lg:px-6">
@@ -138,7 +187,11 @@ export default async function ProductDetailsPage({ params }) {
                     key={idx}
                     className="h-20 w-20 overflow-hidden rounded-xl border-2 border-slate-200 bg-[#f8fafc] p-1 transition hover:border-[#0b4ba2]"
                   >
-                    <img src={src} alt="thumbnail" className="h-full w-full object-cover rounded-lg" />
+                    <img
+                      src={src}
+                      alt={`${productName} view ${idx + 1}`}
+                      className="h-full w-full rounded-lg object-cover"
+                    />
                   </div>
                 ))}
               </div>

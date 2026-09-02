@@ -141,8 +141,13 @@ export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [expandedCategory, setExpandedCategory] = useState(null);
 
-  const apibaseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/web/";
+  const apibaseUrl = process.env.NEXT_PUBLIC_API_URL || "https://jgbmtrading.online/api/web/";
   const backendUrl = apibaseUrl.replace(/\/web\/?$/, "");
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => setMounted(true), 0);
+    return () => window.clearTimeout(timer);
+  }, []);
 
   useEffect(() => {
     if (token) {
@@ -263,7 +268,7 @@ export default function Header() {
               <FaPhoneAlt className="text-[10px]" />
               <span className="font-semibold">+91 8810426236</span>
             </a>
-            <span>📍 Mahadev Ghat Rd, Raipur 492001, Chhattisgarh</span>
+            <span>Mahadev Ghat Rd, Raipur 492001, Chhattisgarh</span>
           </div>
 
           <div className="flex items-center gap-5">

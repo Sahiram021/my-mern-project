@@ -4,8 +4,10 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "nodemon"
+    "test": "node --test test/*.test.js",
+    "test:live-admin": "node test/live-admin-api-smoke.js",
+    "check": "node --check index.js",
+    "start": "node index.js"
   },
   "keywords": [],
   "author": "",

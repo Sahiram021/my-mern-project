@@ -9,6 +9,23 @@ import ProductsSection from "./Components/Home-Components/ProductsSection";
 import ShippingSection from "./Components/Home-Components/ShippingSection";
 import PowderDescriptionSection from "./Components/Home-Components/PowderDescriptionSection";
 
+export const revalidate = 60;
+
+export const metadata = {
+  title: {
+    absolute: "Industrial Calcium & Mineral Powders | JGB Trading Private Limited",
+  },
+  description:
+    "Buy calcium carbonate, anti-moisture powder, talc, dolomite and other industrial mineral powders from JGB Trading in Raipur.",
+  alternates: { canonical: "/" },
+  openGraph: {
+    url: "/",
+    title: "Industrial Calcium & Mineral Powders | JGB Trading",
+    description:
+      "Premium industrial mineral powders with reliable supply and support across India.",
+  },
+};
+
 export default async function Home() {
   let productTabData = null;
   try {
@@ -33,6 +50,9 @@ export default async function Home() {
 
   return (
     <div className="bg-white">
+      <h1 className="sr-only">
+        Industrial Calcium Carbonate and Mineral Powders from JGB Trading
+      </h1>
       <Homebanner
         imagepath={SliderData?.staticPath}
         sdata={SliderData?.data}

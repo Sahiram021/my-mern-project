@@ -12,24 +12,27 @@ const adminAuthRoutes = require("./admin/adminAuthRoutes")
 const sliderRoutes = require("./admin/sliderRoutes")
 const whyChooseUsRoutes = require("./admin/whyChooseUsRoutes")
 const orderRoutes = require("./admin/orderRoutes")
+const verifyAdmin = require("../Middleware/adminAuth")
 
 
  let adminRoutes=express.Router()
 
- adminRoutes.use("/color",colorRoutes)
+adminRoutes.use("/adminauth",adminAuthRoutes)
+adminRoutes.use(verifyAdmin)
+
+adminRoutes.use("/color",colorRoutes)
 adminRoutes.use("/material",materialRoutes)
 adminRoutes.use("/faq",faqRoutes)
 adminRoutes.use("/country",countryRoutes)
-adminRoutes.use("/category",categoryRoutes)
 adminRoutes.use("/category",categoryRoutes)
 adminRoutes.use("/subcategory",subcategoryRoutes)
 adminRoutes.use("/subsubcategory",subSubcategoryRoutes)
 adminRoutes.use("/product",productRoutes)
 adminRoutes.use("/enquiry",enquiryRoutes)
-adminRoutes.use("/adminauth",adminAuthRoutes)
 adminRoutes.use("/slider",sliderRoutes)
 adminRoutes.use("/whychooseus",whyChooseUsRoutes)
 adminRoutes.use("/order",orderRoutes)
+adminRoutes.use("/orders",orderRoutes)
 
 
 // adminRoutes.post("/login",(req,res)=>{
@@ -37,5 +40,4 @@ adminRoutes.use("/order",orderRoutes)
 // })
 
 module.exports=adminRoutes
-
 

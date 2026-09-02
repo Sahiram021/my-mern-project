@@ -2,8 +2,9 @@ import { FaFilter, FaMagnifyingGlass, FaPenToSquare, FaRotate } from 'react-icon
 import axios from 'axios'
 import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router'
-import { showSuccess, showWarning } from '../../common/notification/notification'
+import { showError, showSuccess, showWarning } from '../../common/notification/notification'
 import { confirmDelete } from '../../common/sweetAlert/deleteConfirm'
+import ImagePathPreview from '../../common/ImagePathPreview'
 export default function ViewSubCategories() {
 const [data,setData]=useState([])
   const [imagePath,setImagePath]=useState('')
@@ -30,6 +31,7 @@ const apiBaseUrl=import.meta.env.VITE_APIBASEPATH
         setImagePath(finalRes.staticPath)
       }
     })
+    .catch((error)=>showError(error.response?.data?.message || 'Unable to load subcategories'))
   },[apiBaseUrl,searchName,searchSlug,searchOrder])
 
   useEffect(()=>{
@@ -68,6 +70,7 @@ const apiBaseUrl=import.meta.env.VITE_APIBASEPATH
           setIds([])
         }
       })
+      .catch((error)=>showError(error.response?.data?.message || 'Unable to delete subcategories'))
     }else{
       showWarning('Please select at least one sub category')
     }
@@ -85,6 +88,7 @@ const apiBaseUrl=import.meta.env.VITE_APIBASEPATH
           setIds([])
         }
       })
+      .catch((error)=>showError(error.response?.data?.message || 'Unable to change subcategory status'))
     }else{
       showWarning('Please select at least one sub category')
     }
@@ -163,7 +167,7 @@ const apiBaseUrl=import.meta.env.VITE_APIBASEPATH
               <td className='px-2 py-4'>{Obj.parentCategory?.name}</td>
               <td className='px-2 py-4'>{Obj.name}</td>
               <td className='px-2 py-4'>
-                <img src={imagePath+Obj.image} alt={Obj.name} className='w-16 h-16 mx-auto rounded object-cover' />
+                <ImagePathPreview basePath={imagePath} filename={Obj.image} alt={Obj.name} />
               </td>
               <td className='px-2 py-4'>{Obj.slug}</td>
               <td className='px-2 py-4'>{Obj.order}</td>

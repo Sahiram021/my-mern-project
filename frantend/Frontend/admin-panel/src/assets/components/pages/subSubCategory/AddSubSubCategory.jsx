@@ -6,7 +6,7 @@ import { showError, showSuccess } from '../../common/notification/notification';
 
 export default function AddSubSubCategory() {
 
-   let apiBaseUrl = import.meta.env.VITE_APIBASEPATH;
+   let apiBaseUrl = import.meta.env.VITE_APIBASEPATH || 'http://localhost:8000/api/admin/';
    let [parent, setParent] = useState([])
    let [subcategoryData, setsubcategoryData] = useState([])
    let [editData, setEditData] = useState(null)
@@ -36,7 +36,7 @@ export default function AddSubSubCategory() {
       
     })
     .catch((error)=>{
-      showError(error.response?.data?.message || 'Sub sub category save nahi hui')
+      showError(error.response?.data?.error || error.response?.data?.message || 'Sub-subcategory could not be saved')
     })
    }
 
@@ -81,7 +81,7 @@ export default function AddSubSubCategory() {
 
    useEffect(()=>{
     if(id){
-      axios.put(`${apiBaseUrl}subsubcategory/get-detail/${id}`)
+      axios.get(`${apiBaseUrl}subsubcategory/get-detail/${id}`)
       .then((res)=>res.data)
       .then((finalRes)=>{
         if(finalRes.status){
@@ -91,6 +91,9 @@ export default function AddSubSubCategory() {
           setSelectedParentCategory(parentId || '')
           setSelectedSubCategory(selectedSubId)
           getSubCategory(parentId, selectedSubId)
+          if(finalRes.data?.image){
+            setImagePreview(`${finalRes.staticPath}${finalRes.data.image}`)
+          }
         }
       })
     }
@@ -118,7 +121,7 @@ export default function AddSubSubCategory() {
                 </div>
               </div>
               }
-              <input onChange={previewImage} name='image' accept='image/*' className='absolute inset-0 opacity-0 cursor-pointer' type='file' />
+              <input onChange={previewImage} name='image' accept='image/*' className='absolute inset-0 opacity-0 cursor-pointer' type='file' required={!id} />
             </div>
           </div>
           <div className='w-full'>
@@ -128,6 +131,7 @@ export default function AddSubSubCategory() {
                 onChange={(e) => getSubCategory(e.target.value)}
                 value={selectedParentCategory}
                 name='parentCategory'
+                required
                 className='text-[17px] border cursor-pointer border-slate-300 text-gray-900 rounded-lg focus:ring-2 focus:ring-indigo-400 focus:border-indigo-500 block w-full py-2.5 px-3'
               >
                 <option value=''>Select Parent Category</option>
@@ -148,6 +152,7 @@ export default function AddSubSubCategory() {
                 name='subCategory'
                 value={selectedSubCategory}
                 onChange={(e) => setSelectedSubCategory(e.target.value)}
+                required
                 className='text-[17px] border cursor-pointer border-slate-300 text-gray-900 rounded-lg focus:ring-2 focus:ring-indigo-400 focus:border-indigo-500 block w-full py-2.5 px-3'
               >
                 <option value=''>Select Sub Category</option>
@@ -163,7 +168,7 @@ export default function AddSubSubCategory() {
             </div>
             <div className='mb-6'>
               <label className='block mb-2 text-md font-medium text-gray-700'>Name</label>
-              <input type='text' name='name' defaultValue={editData?.name} autoComplete='off' className='text-[17px] border border-slate-300 text-gray-900 rounded-lg focus:ring-2 focus:ring-indigo-400 focus:border-indigo-500 block w-full py-2.5 px-3' placeholder='Enter sub sub category name' />
+              <input type='text' name='name' defaultValue={editData?.name} autoComplete='off' required minLength='2' className='text-[17px] border border-slate-300 text-gray-900 rounded-lg focus:ring-2 focus:ring-indigo-400 focus:border-indigo-500 block w-full py-2.5 px-3' placeholder='Enter sub sub category name' />
             </div>
             <div className='mb-6'>
               <label className='block mb-2 text-md font-medium text-gray-700'>Slug</label>
@@ -171,7 +176,7 @@ export default function AddSubSubCategory() {
             </div>
             <div className='mb-6'>
               <label className='block mb-2 text-md font-medium text-gray-700'>Order</label>
-              <input type='number' name='order' defaultValue={editData?.order} min='1' autoComplete='off' className='text-[17px] border border-slate-300 text-gray-900 rounded-lg focus:ring-2 focus:ring-indigo-400 focus:border-indigo-500 block w-full py-2.5 px-3' placeholder='Enter order number' />
+              <input type='number' name='order' defaultValue={editData?.order ?? 0} min='0' autoComplete='off' className='text-[17px] border border-slate-300 text-gray-900 rounded-lg focus:ring-2 focus:ring-indigo-400 focus:border-indigo-500 block w-full py-2.5 px-3' placeholder='Enter order number' />
             </div>
             <div className='flex justify-end'>
               <button type='submit' className='mt-3 cursor-pointer text-white bg-indigo-600 hover:bg-indigo-700 focus:ring-4 focus:ring-indigo-300 font-medium rounded-lg text-md px-6 py-2.5 shadow-sm transition-all'>

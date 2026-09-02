@@ -41,7 +41,7 @@ export default function ProductCard({ product, compact = false }) {
   const dispatch = useDispatch();
   const reduxToken = useSelector((state) => state.userStore?.token);
   const wishlist = useSelector((state) => state.wishlistStore?.wishlist || []);
-  const apibaseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/web/";
+  const apibaseUrl = process.env.NEXT_PUBLIC_API_URL || "https://jgbmtrading.online/api/web/";
 
   const token = reduxToken || (typeof window !== "undefined" ? Cookies.get("token") : "");
 
@@ -251,4 +251,3 @@ export default function ProductCard({ product, compact = false }) {
     </article>
   );
 }
-

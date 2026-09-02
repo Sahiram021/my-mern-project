@@ -3,90 +3,119 @@ const adminRoutesroutes = require("./App/Routes/adminRoutes");
 const dbconnection = require("./App/config/DBconnection");
 let cors = require("cors");
 const webRoutes = require("./App/Routes/webRoutes");
-const adminModel = require("./App/Models/adminModel");
-const bcrypt = require('bcrypt');
-const saltRounds = 10;
 require("dotenv").config();
 
 const fs = require("fs");
 const path = require("path");
+const { uploadsRoot } = require("./App/config/upload");
 
 let App = express();
-App.use(cors());
-App.use(express.json());
+App.set("trust proxy", 1);
+const normalizeOrigin = (origin) => String(origin || "").trim().replace(/\/$/, "");
+const allowedOrigins = new Set(
+    [
+        process.env.APPURL,
+        process.env.ADMINAPPURL,
+        ...(process.env.CORS_ORIGINS || "").split(","),
+        "http://localhost:3000",
+        "http://localhost:5173",
+    ]
+        .map(normalizeOrigin)
+        .filter(Boolean)
+);
 
-// Ensure upload folders exist
-const uploadDirs = [
-  "uploads/category",
-  "uploads/subcategory",
-  "uploads/subsubcategory",
-  "uploads/product",
-  "uploads/slider",
-  "uploads/whychooseus",
-  "uploads/user",
-  "uploads/admin",
-  "Uploads/category",
-  "Uploads/subcategory",
-  "Uploads/subsubcategory",
-  "Uploads/product",
-  "Uploads/slider",
-  "Uploads/whychooseus",
-  "Uploads/user",
-  "Uploads/admin",
-];
+const corsOptions = {
+    origin(origin, callback) {
+        if (!origin || allowedOrigins.has(normalizeOrigin(origin))) {
+            return callback(null, true);
+        }
+        return callback(new Error("Origin is not allowed by CORS"));
+    },
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization", "x-requested-with", "Accept", "Origin"]
+};
 
-uploadDirs.forEach((dir) => {
-  const fullPath = path.join(__dirname, dir);
-  if (!fs.existsSync(fullPath)) {
-    fs.mkdirSync(fullPath, { recursive: true });
-  }
+App.use(cors(corsOptions));
+App.use(express.json({ limit: "10mb" }));
+App.use(express.urlencoded({ extended: true, limit: "10mb" }));
+App.use(["/api", "/admin", "/web"], (_req, res, next) => {
+    res.set("X-Robots-Tag", "noindex, nofollow, noarchive");
+    next();
 });
 
-App.use("/uploads/category", express.static(path.join(__dirname, "uploads/category")), express.static(path.join(__dirname, "Uploads/category")));
-App.use("/uploads/subcategory", express.static(path.join(__dirname, "uploads/subcategory")), express.static(path.join(__dirname, "Uploads/subcategory")));
-App.use("/uploads/subsubcategory", express.static(path.join(__dirname, "uploads/subsubcategory")), express.static(path.join(__dirname, "Uploads/subsubcategory")));
-App.use("/uploads/product", express.static(path.join(__dirname, "uploads/product")), express.static(path.join(__dirname, "Uploads/product")));
-App.use("/uploads/slider", express.static(path.join(__dirname, "uploads/slider")), express.static(path.join(__dirname, "Uploads/slider")));
-App.use("/uploads/whychooseus", express.static(path.join(__dirname, "uploads/whychooseus")), express.static(path.join(__dirname, "Uploads/whychooseus")));
-App.use("/uploads/user", express.static(path.join(__dirname, "uploads/user")), express.static(path.join(__dirname, "Uploads/user")));
-App.use("/uploads/admin", express.static(path.join(__dirname, "uploads/admin")), express.static(path.join(__dirname, "Uploads/admin")));
+// Linux is case-sensitive. New files always go to the tracked `Uploads` tree;
+// the lowercase path remains as a read-only fallback for older deployments.
+const uploadFolders = [
+    "category",
+    "subcategory",
+    "subsubcategory",
+    "product",
+    "slider",
+    "whychooseus",
+    "user",
+    "admin",
+];
 
+uploadFolders.forEach((folder) => {
+    const canonicalPath = path.join(uploadsRoot, folder);
+    const legacyPath = path.join(__dirname, "uploads", folder);
+    fs.mkdirSync(canonicalPath, { recursive: true });
+    App.use(
+        `/uploads/${folder}`,
+        express.static(canonicalPath),
+        express.static(legacyPath)
+    );
+});
+
+App.use("/api/admin", adminRoutesroutes);
 App.use("/admin", adminRoutesroutes);
+App.use("/api/web", webRoutes);
 App.use("/web", webRoutes);
 
-App.get("/", (req, res) => {
+App.get(["/", "/api", "/api/"], (req, res) => {
     res.send({ status: 1, message: "JGB Trading Backend API is running successfully!" });
 });
 
-App.listen(process.env.PORT || 8000, async () => {
-    console.log(` Server is running on port ${process.env.PORT || 8000}`);
-    try {
-        await dbconnection();
-        let targetEmail = process.env.ADMINEMAIL || "jgb635860@gmail.com";
-        let targetPassword = process.env.ADMINPASSWORD || "54@54@123";
-        let hashPassword = bcrypt.hashSync(targetPassword, saltRounds);
+App.use((error, _req, res, _next) => {
+    const isCorsError = error.message === "Origin is not allowed by CORS";
+    const isUploadError = error.name === "MulterError" || error.message === "Only image uploads are allowed";
+    const statusCode = isCorsError ? 403 : isUploadError ? 400 : 500;
 
-        let checkAdmin = await adminModel.findOne();
-        if (!checkAdmin) {
-            await adminModel.create({
-                name: "Admin",
-                email: targetEmail,
-                password: hashPassword
-            });
-            console.log(` Default admin user created successfully (${targetEmail}).`);
-        } else {
-            await adminModel.updateOne(
-                { _id: checkAdmin._id },
-                {
-                    $set: {
-                        email: targetEmail,
-                        password: hashPassword
-                    }
-                }
-            );
-            console.log(` Admin user credentials synchronized with .env (${targetEmail}).`);
-        }
-    } catch (err) {
-        console.error(" Startup DB/Admin warning:", err.message);
+    if (statusCode === 500) {
+        console.error("Unhandled request error:", error.message);
     }
+
+    return res.status(statusCode).send({
+        status: 0,
+        message: isCorsError
+            ? "Origin is not allowed"
+            : isUploadError
+              ? error.message
+              : "Internal server error",
+    });
 });
+
+const start = async () => {
+    if (!process.env.MONGO_URI) {
+        throw new Error("MONGO_URI is required");
+    }
+    if (!process.env.TOKENKEY) {
+        throw new Error("TOKENKEY is required");
+    }
+
+    await dbconnection();
+    const port = process.env.PORT || 8000;
+    return App.listen(port, () => {
+        console.log(`Server is running on port ${port}`);
+    });
+};
+
+if (require.main === module) {
+    start().catch((error) => {
+        console.error("Backend startup failed:", error.message);
+        process.exit(1);
+    });
+}
+
+module.exports = { App, start };

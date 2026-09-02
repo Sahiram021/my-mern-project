@@ -8,7 +8,7 @@ export default function AddSubCategory() {
    let [parent, setParent] = useState([])
    let [editData, setEditData] = useState(null)
    let [imagePreview, setImagePreview] = useState('')
-   let apiBaseUrl = import.meta.env.VITE_APIBASEPATH;
+   let apiBaseUrl = import.meta.env.VITE_APIBASEPATH || 'http://localhost:8000/api/admin/';
    let navigate = useNavigate()
    let {id} = useParams()
 
@@ -16,16 +16,10 @@ export default function AddSubCategory() {
     e.preventDefault()
     let apiRequest
 
+    let formData = new FormData(e.target)
     if(id){
-      let obj={
-        parentCategory:e.target.parentCategory.value,
-        name:e.target.name.value,
-        slug:e.target.slug.value,
-        order:e.target.order.value
-      }
-      apiRequest=axios.put(`${apiBaseUrl}subcategory/update/${id}`, obj)
+      apiRequest=axios.put(`${apiBaseUrl}subcategory/update/${id}`, formData)
     }else{
-      let formData = new FormData(e.target)
       apiRequest=axios.post(`${apiBaseUrl}subcategory/create`, formData)
     }
 
@@ -40,7 +34,7 @@ export default function AddSubCategory() {
       }
     })
     .catch((error)=>{
-      showError(error.response?.data?.message || 'Sub category save nahi hui')
+      showError(error.response?.data?.error || error.response?.data?.message || 'Subcategory could not be saved')
     })
    }
 
@@ -66,11 +60,14 @@ export default function AddSubCategory() {
 
    useEffect(()=>{
     if(id){
-      axios.put(`${apiBaseUrl}subcategory/get-detail/${id}`)
+      axios.get(`${apiBaseUrl}subcategory/get-detail/${id}`)
       .then((res)=>res.data)
       .then((finalRes)=>{
         if(finalRes.status){
           setEditData(finalRes.data)
+          if(finalRes.data?.image){
+            setImagePreview(`${finalRes.staticPath}${finalRes.data.image}`)
+          }
         }
       })
     }
@@ -98,13 +95,13 @@ export default function AddSubCategory() {
                 </div>
               </div>
               }
-              <input onChange={previewImage} name='image' accept='image/*' className='absolute inset-0 opacity-0 cursor-pointer' type='file' />
+              <input onChange={previewImage} name='image' accept='image/*' className='absolute inset-0 opacity-0 cursor-pointer' type='file' required={!id} />
             </div>
           </div>
           <div className='w-full'>
             <div className='mb-6'>
               <label className='block mb-2 text-md font-medium text-gray-700'>Select Parent Category</label>
-              <select name="parentCategory" defaultValue={editData?.parentCategory?._id || editData?.parentCategory || ''} className='text-[17px] border cursor-pointer border-slate-300 text-gray-900 rounded-lg focus:ring-2 focus:ring-indigo-400 focus:border-indigo-500 block w-full py-2.5 px-3'>
+              <select name="parentCategory" defaultValue={editData?.parentCategory?._id || editData?.parentCategory || ''} required className='text-[17px] border cursor-pointer border-slate-300 text-gray-900 rounded-lg focus:ring-2 focus:ring-indigo-400 focus:border-indigo-500 block w-full py-2.5 px-3'>
                 <option value=''>Select Category</option>
                 {
                   parent.map((obj)=>{
@@ -118,7 +115,7 @@ export default function AddSubCategory() {
             </div>
             <div className='mb-6'>
               <label className='block mb-2 text-md font-medium text-gray-700'>Sub Category Name</label>
-              <input type='text' name='name' defaultValue={editData?.name} autoComplete='off' className='text-[17px] border border-slate-300 text-gray-900 rounded-lg focus:ring-2 focus:ring-indigo-400 focus:border-indigo-500 block w-full py-2.5 px-3' placeholder='Enter sub category name' />
+              <input type='text' name='name' defaultValue={editData?.name} autoComplete='off' required minLength='2' className='text-[17px] border border-slate-300 text-gray-900 rounded-lg focus:ring-2 focus:ring-indigo-400 focus:border-indigo-500 block w-full py-2.5 px-3' placeholder='Enter sub category name' />
             </div>
             <div className='mb-6'>
               <label className='block mb-2 text-md font-medium text-gray-700'>Slug</label>
@@ -126,7 +123,7 @@ export default function AddSubCategory() {
             </div>
             <div className='mb-6'>
               <label className='block mb-2 text-md font-medium text-gray-700'>Order</label>
-              <input type='number' name='order' defaultValue={editData?.order} min='1' autoComplete='off' className='text-[17px] border border-slate-300 text-gray-900 rounded-lg focus:ring-2 focus:ring-indigo-400 focus:border-indigo-500 block w-full py-2.5 px-3' placeholder='Enter order number' />
+              <input type='number' name='order' defaultValue={editData?.order ?? 0} min='0' autoComplete='off' className='text-[17px] border border-slate-300 text-gray-900 rounded-lg focus:ring-2 focus:ring-indigo-400 focus:border-indigo-500 block w-full py-2.5 px-3' placeholder='Enter order number' />
             </div>
             
             <div className='flex justify-end'>

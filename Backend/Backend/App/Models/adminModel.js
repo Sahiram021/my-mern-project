@@ -5,9 +5,12 @@ let adminSchema = new mongoose.Schema({
     },
     email: {
         type: String,
+        trim: true,
+        lowercase: true,
     },
     password: {
         type: String,
+        select: false,
     },
     image: {
         type: String,

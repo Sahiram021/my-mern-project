@@ -29,7 +29,7 @@ let register = async (req, res) => {
             password: hashPassword
         });
 
-        let token = jwt.sign({ id: insertRes._id }, process.env.TOKENKEY || "12345");
+        let token = jwt.sign({ id: insertRes._id }, process.env.TOKENKEY);
 
         // 1. Send Welcome Email to User (asynchronous, non-blocking)
         sendEmailSafe({
@@ -72,7 +72,7 @@ let login = async (req, res) => {
         let dbPassword = checkEmail.password;
         let checkPassword = await bcrypt.compare(password, dbPassword);
         if (checkPassword) {
-            let token = jwt.sign({ id: checkEmail._id }, process.env.TOKENKEY || "12345");
+            let token = jwt.sign({ id: checkEmail._id }, process.env.TOKENKEY);
             res.send({
                 status: 1,
                 message: "Login successfully",
@@ -93,7 +93,7 @@ let changePassword = async (req, res) => {
         let token = req.headers.authorization?.split(" ")[1];
         if (!token) return res.send({ status: 0, message: "Authorization token required" });
 
-        let decoded = jwt.verify(token, process.env.TOKENKEY || "12345");
+        let decoded = jwt.verify(token, process.env.TOKENKEY);
         let { id } = decoded;
         let userData = await userModel.findOne({ _id: id });
         if (!userData) return res.send({ status: 0, message: "User not found" });
@@ -125,7 +125,7 @@ let updateProfile = async (req, res) => {
         let token = req.headers.authorization?.split(" ")[1];
         if (!token) return res.send({ status: 0, message: "Authorization token required" });
 
-        let decoded = jwt.verify(token, process.env.TOKENKEY || "12345");
+        let decoded = jwt.verify(token, process.env.TOKENKEY);
         let { id } = decoded;
         let updateObj = { address, phone, name };
         if (req.file && req.file.filename) {
@@ -143,7 +143,7 @@ let getProfile = async (req, res) => {
         let token = req.headers.authorization?.split(" ")[1];
         if (!token) return res.send({ status: 0, message: "Authorization token required" });
 
-        let decoded = jwt.verify(token, process.env.TOKENKEY || "12345");
+        let decoded = jwt.verify(token, process.env.TOKENKEY);
         let { id } = decoded;
         let userData = await userModel.findOne({ _id: id });
         if (!userData) {
@@ -166,7 +166,7 @@ let forgotPassword = async (req, res) => {
         let { email } = req.body;
         let emailCheck = await userModel.findOne({ email });
         if (emailCheck) {
-            let resetToken = jwt.sign({ id: emailCheck._id }, process.env.TOKENKEY || "12345");
+            let resetToken = jwt.sign({ id: emailCheck._id }, process.env.TOKENKEY);
             let resetUrl = `${process.env.APPURL || 'http://localhost:3000'}/reset-password/${emailCheck._id}?token=${resetToken}`;
             
             await sendEmailSafe({

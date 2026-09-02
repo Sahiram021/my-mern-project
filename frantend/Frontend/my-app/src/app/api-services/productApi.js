@@ -2,7 +2,7 @@ import axios from "axios";
 import { products as fallbackProducts } from "../data/products";
 import { buildProductImageUrl } from "../utils/imageUrl";
 
-const apibaseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/web/";
+const apibaseUrl = process.env.NEXT_PUBLIC_API_URL || "https://jgbmtrading.online/api/web/";
 
 function parsePrice(value) {
   if (typeof value === "number") return value;
@@ -183,4 +183,3 @@ export async function fetchCategoriesList() {
     { _id: "c6", name: "Limestone Powder", slug: "limestone-powder" },
   ];
 }
-

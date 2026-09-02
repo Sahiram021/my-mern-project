@@ -8,17 +8,26 @@ import {
   FaRotate,
 } from "react-icons/fa6";
 import { showError, showSuccess } from "../../common/notification/notification";
+import { getApiErrorMessage } from "../../../../api/errors";
 
 const statusOptions = [
   { value: "pending", label: "Pending" },
   { value: "processing", label: "Processing" },
   { value: "success", label: "Success" },
+  { value: "placed", label: "Placed" },
+  { value: "shipped", label: "Shipped" },
+  { value: "delivered", label: "Delivered" },
+  { value: "cancelled", label: "Cancelled" },
 ];
 
 const statusClasses = {
   pending: "border-amber-200 bg-amber-50 text-amber-700",
   processing: "border-blue-200 bg-blue-50 text-blue-700",
   success: "border-emerald-200 bg-emerald-50 text-emerald-700",
+  placed: "border-indigo-200 bg-indigo-50 text-indigo-700",
+  shipped: "border-cyan-200 bg-cyan-50 text-cyan-700",
+  delivered: "border-emerald-200 bg-emerald-50 text-emerald-700",
+  cancelled: "border-rose-200 bg-rose-50 text-rose-700",
 };
 
 function formatDate(value) {
@@ -161,38 +170,37 @@ export default function ViewOrders() {
 
     setSavingId(orderId);
     axios
-      .post(`${apiBaseUrl}order/update-status/${orderId}`, { status: nextStatus })
+      .patch(`${apiBaseUrl}order/${orderId}/status`, { status: nextStatus })
       .then((res) => res.data)
       .then((finalRes) => {
         if (finalRes.status) {
+          const persistedOrder = finalRes.data || { _id: orderId, status: nextStatus };
           setData((orders) =>
             orders.map((order) =>
-              order._id === orderId ? { ...order, status: nextStatus } : order
+              order._id === orderId ? { ...order, ...persistedOrder } : order
             )
           );
+          setDraftStatus((statuses) => ({
+            ...statuses,
+            [orderId]: persistedOrder.status || nextStatus,
+          }));
           setViewData((order) =>
-            order?._id === orderId ? { ...order, status: nextStatus } : order
+            order?._id === orderId ? { ...order, ...persistedOrder } : order
           );
           showSuccess(finalRes.message || "Order status updated successfully");
         } else {
-          const errMsg =
+          const errorMsg =
             finalRes.message ||
             (typeof finalRes.error === "string" ? finalRes.error : finalRes.error?.status) ||
             "Failed to update order status";
-          showError(errMsg);
+          showError(errorMsg);
         }
       })
       .catch((err) => {
-        const errorMsg =
-          err.response?.data?.message ||
-          err.response?.data?.error ||
-          err.message ||
-          "Error occurred while saving order status";
-        showError(typeof errorMsg === "string" ? errorMsg : "Error occurred while saving order status");
+        showError(getApiErrorMessage(err, "Error occurred while saving order status"));
       })
       .finally(() => setSavingId(""));
   };
-
   const resetFilters = () => {
     setSearchText("");
     setStatusFilter("");

@@ -3,11 +3,12 @@ import iziToast from 'izitoast'
 import 'izitoast/dist/css/iziToast.min.css'
 import { useState } from 'react'
 import { FaLock } from 'react-icons/fa6'
-import { Link, useNavigate, useParams } from 'react-router'
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router'
 
 export default function ResetPassword() {
   const { id } = useParams()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const apiBaseUrl = import.meta.env.VITE_APIBASEPATH
   const [loading, setLoading] = useState(false)
 
@@ -26,6 +27,7 @@ export default function ResetPassword() {
     const obj = {
       newPassword: event.target.newPassword.value,
       confirmPassword: event.target.confirmPassword.value,
+      token: searchParams.get('token') || '',
     }
 
     if (obj.newPassword !== obj.confirmPassword) {

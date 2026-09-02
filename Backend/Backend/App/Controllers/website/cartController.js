@@ -5,7 +5,7 @@ let addTocart = async (req, res) => {
     try {
         let token = req.headers.authorization?.split(" ")[1];
         if (!token) return res.send({ status: 0, message: "Authorization token required" });
-        let decoded = jwt.verify(token, process.env.TOKENKEY || "12345");
+        let decoded = jwt.verify(token, process.env.TOKENKEY);
         let { id } = decoded;
         let cartObject = { ...req.body };
         cartObject['userId'] = id;
@@ -20,7 +20,7 @@ let viewCart = async (req, res) => {
     try {
         let token = req.headers.authorization?.split(" ")[1];
         if (!token) return res.send({ status: 0, message: "Authorization token required" });
-        let decoded = jwt.verify(token, process.env.TOKENKEY || "12345");
+        let decoded = jwt.verify(token, process.env.TOKENKEY);
         let { id } = decoded;
         let result = await cartModel.find({ userId: id });
         res.send({ status: 1, message: "Cart items retrieved successfully", data: result });

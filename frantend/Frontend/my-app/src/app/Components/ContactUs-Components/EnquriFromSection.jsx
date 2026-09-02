@@ -14,7 +14,7 @@ const showToast = async (type, title, message) => {
 };
 
 export default function EnquriFromSection() {
-  const apibaseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/web/";
+  const apibaseUrl = process.env.NEXT_PUBLIC_API_URL || "https://jgbmtrading.online/api/web/";
   const [loading, setLoading] = useState(false);
 
   const saveEnquiry = (event) => {

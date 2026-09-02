@@ -3,9 +3,10 @@ import { useCallback, useEffect, useState } from 'react';
 import { FaRegImage } from 'react-icons/fa6'
 import { useNavigate,useParams } from 'react-router';
 import Select from 'react-select';
+import { showError, showSuccess } from '../../common/notification/notification';
 
 export default function AddProduct() {
-     let apiBaseUrl = import.meta.env.VITE_APIBASEPATH;
+     let apiBaseUrl = import.meta.env.VITE_APIBASEPATH || 'http://localhost:8000/api/admin/';
   let [parent, setParent] = useState([])
   let [subcategoryData, setsubcategoryData] = useState([])
   let [subsubcategoryData, setsubsubcategoryData] = useState([])
@@ -13,6 +14,10 @@ export default function AddProduct() {
   let [material, setmaterial] = useState([])
   let [selectedColor, setSelectedColor] = useState([])
   let [selectedMaterial, setSelectedMaterial] = useState([])
+  let [selectedParent, setSelectedParent] = useState('')
+  let [selectedSubcategory, setSelectedSubcategory] = useState('')
+  let [selectedSubsubcategory, setSelectedSubsubcategory] = useState('')
+  let [productType, setProductType] = useState('New')
   let [imagePreview,setImagePreview]=useState('')
   let [galleryPreview,setGalleryPreview]=useState([])
   let [data,setData]=useState(null)
@@ -60,6 +65,10 @@ export default function AddProduct() {
      },[apiBaseUrl])
 
       let getSubCategory=useCallback((parent_id)=>{
+    setSelectedParent(parent_id || '')
+    setSelectedSubcategory('')
+    setSelectedSubsubcategory('')
+    setsubsubcategoryData([])
     if(!parent_id){
       setsubcategoryData([])
       return
@@ -96,6 +105,8 @@ export default function AddProduct() {
 
    
       let getSubsubCategory=useCallback((parent_id)=>{
+    setSelectedSubcategory(parent_id || '')
+    setSelectedSubsubcategory('')
     if(!parent_id){
       setsubsubcategoryData([])
       return
@@ -142,37 +153,26 @@ export default function AddProduct() {
    },[imagePreview,galleryPreview])
 
    let saveProduct=(e)=>{
+    e.preventDefault()
     let fromData=new FormData(e.target)
-    // fromData.append("color", JSON.stringify(selectedColor.map((obj)=>obj.value)))
-    // fromData.append("material", JSON.stringify(selectedMaterial.map((obj)=>obj.value)))
-    if(id){
-      axios.post(`${apiBaseUrl}product/update/${id}`,fromData)
-    .then((res)=>res.data)
-    .then((finalRes)=>{
-      if(finalRes.status){
-        navigate('/product/view')
-      }
-      else{
-        //Error
-      }
-    })
-    e.preventDefault()
+    const apiRequest = id
+      ? axios.put(`${apiBaseUrl}product/update/${id}`,fromData)
+      : axios.post(`${apiBaseUrl}product/create`,fromData)
 
-    }else{
-      axios.post(`${apiBaseUrl}product/create`,fromData)
+    apiRequest
     .then((res)=>res.data)
     .then((finalRes)=>{
       if(finalRes.status){
+        showSuccess(finalRes.message)
         navigate('/product/view')
       }
       else{
-        //Error
+        showError(finalRes.error || finalRes.message)
       }
     })
-    e.preventDefault()
-    }
-    
-    
+    .catch((error)=>{
+      showError(error.response?.data?.error || error.response?.data?.message || 'Product could not be saved')
+    })
    }
    
   let getProductDetails = () => {
@@ -183,16 +183,23 @@ export default function AddProduct() {
       .then((finalRes) => {
         if (finalRes.status) {
           setData(finalRes.data);
-          getSubCategoryEdit(finalRes.data.parentCategory._id)
-          getSubsubCategoryEdit(finalRes.data.subcategory._id)
-          let covertColor=finalRes.data.color.map((obj)=>{
+          const parentId = finalRes.data.parentCategory?._id || finalRes.data.parentCategory || ''
+          const subcategoryId = finalRes.data.subcategory?._id || finalRes.data.subcategory || ''
+          const subsubcategoryId = finalRes.data.subsubcategory?._id || finalRes.data.subsubcategory || ''
+          setSelectedParent(parentId)
+          setSelectedSubcategory(subcategoryId)
+          setSelectedSubsubcategory(subsubcategoryId)
+          setProductType(finalRes.data.productType || 'New')
+          if(parentId) getSubCategoryEdit(parentId)
+          if(subcategoryId) getSubsubCategoryEdit(subcategoryId)
+          let covertColor=(finalRes.data.color || []).map((obj)=>{
             return{
               value:obj._id,
               label:obj.name
             }
           })
           setSelectedColor(covertColor);
-          let covertMaterial=finalRes.data.material.map((obj)=>{
+          let covertMaterial=(finalRes.data.material || []).map((obj)=>{
             return{
               value:obj._id,
               label:obj.name
@@ -200,7 +207,7 @@ export default function AddProduct() {
           })
           setSelectedMaterial(covertMaterial);
           setImagePreview(finalRes.staticPath+finalRes.data.image)
-          setGalleryPreview(finalRes.data.gallery.map((imgName)=>finalRes.staticPath+imgName))
+          setGalleryPreview((finalRes.data.gallery || []).map((imgName)=>finalRes.staticPath+imgName))
           //setGalleryPreview(allImg)
           
         }
@@ -216,6 +223,10 @@ export default function AddProduct() {
         setData(null)
         setSelectedColor([])
         setSelectedMaterial([])
+        setSelectedParent('')
+        setSelectedSubcategory('')
+        setSelectedSubsubcategory('')
+        setProductType('New')
         setImagePreview('')
         setGalleryPreview([])
       }, 0)
@@ -230,17 +241,17 @@ export default function AddProduct() {
         <h3 className='text-[24px] font-semibold bg-gradient-to-r from-indigo-600 to-indigo-500 py-3 px-5 rounded-t-lg text-white border border-indigo-500'>
           {id ? 'Update Product' : 'Add New Product'}
         </h3>
-        <form onSubmit={saveProduct} className='border border-slate-200 border-t-0 bg-white p-6 rounded-b-lg shadow-sm'>
+        <form key={data?._id || (id ? 'loading-product' : 'new-product')} onSubmit={saveProduct} className='border border-slate-200 border-t-0 bg-white p-6 rounded-b-lg shadow-sm'>
           <div className='flex gap-3'>
             <div className='mb-6 basis-[33%]'>
               
               <label className='block mb-2 text-md font-medium text-gray-700'>Parent Category</label>
-              <select onChange={(e)=>getSubCategory(e.target.value)}  name='parentCategory' className='text-[17px] border cursor-pointer border-slate-300 text-gray-900 rounded-lg focus:ring-2 focus:ring-indigo-400 focus:border-indigo-500 block w-full py-2.5 px-3'>
+              <select onChange={(e)=>getSubCategory(e.target.value)} value={selectedParent} name='parentCategory' required className='text-[17px] border cursor-pointer border-slate-300 text-gray-900 rounded-lg focus:ring-2 focus:ring-indigo-400 focus:border-indigo-500 block w-full py-2.5 px-3'>
                 <option value=''>Select Parent Category</option>
                 {
                   parent.map((obj)=>{
                     return(
-                <option selected={obj._id==data?.parentCategory._id} key={obj._id} value={obj._id}>{obj.name}</option>
+                <option key={obj._id} value={obj._id}>{obj.name}</option>
                     )
 
                   })
@@ -249,12 +260,12 @@ export default function AddProduct() {
             </div>
             <div className='mb-6 basis-[33%]'>
               <label className='block mb-2 text-md font-medium text-gray-700'>Sub Category</label>
-              <select name='subcategory' onChange={(e)=>getSubsubCategory(e.target.value)}  className='text-[17px] border cursor-pointer border-slate-300 text-gray-900 rounded-lg focus:ring-2 focus:ring-indigo-400 focus:border-indigo-500 block w-full py-2.5 px-3'>
+              <select name='subcategory' onChange={(e)=>getSubsubCategory(e.target.value)} value={selectedSubcategory} required className='text-[17px] border cursor-pointer border-slate-300 text-gray-900 rounded-lg focus:ring-2 focus:ring-indigo-400 focus:border-indigo-500 block w-full py-2.5 px-3'>
                 <option value=''>Select Sub Category</option>
                 {
                   subcategoryData.map((obj)=>{
                      return(
-                <option selected={obj._id==data?.subcategory._id} key={obj._id} value={obj._id}>{obj.name}</option>
+                <option key={obj._id} value={obj._id}>{obj.name}</option>
 
                      )
                   })
@@ -263,12 +274,12 @@ export default function AddProduct() {
             </div>
             <div className='mb-6 basis-[33%]'>
               <label className='block mb-2 text-md font-medium text-gray-700'>Sub Sub Category</label>
-               <select name='subsubcategory'  className='text-[17px] border cursor-pointer border-slate-300 text-gray-900 rounded-lg focus:ring-2 focus:ring-indigo-400 focus:border-indigo-500 block w-full py-2.5 px-3'>
+               <select name='subsubcategory' value={selectedSubsubcategory} onChange={(e)=>setSelectedSubsubcategory(e.target.value)} className='text-[17px] border cursor-pointer border-slate-300 text-gray-900 rounded-lg focus:ring-2 focus:ring-indigo-400 focus:border-indigo-500 block w-full py-2.5 px-3'>
                 <option value=''>Select Subsub Category</option>
                 {
                   subsubcategoryData.map((obj)=>{
                      return(
-                <option  selected={obj._id==data?.subsubcategory._id}  key={obj._id} value={obj._id}>{obj.name}</option>
+                <option key={obj._id} value={obj._id}>{obj.name}</option>
 
                      )
                   })
@@ -279,24 +290,24 @@ export default function AddProduct() {
           <div className='flex gap-3'>
             <div className='mb-6 basis-[25%]'>
               <label className='block mb-2 text-md font-medium text-gray-700'>Product Name</label>
-              <input defaultValue={data?.name} type='text' name='name' autoComplete='off' className='text-[17px] border border-gray-300 rounded-lg block w-full py-2.5 px-3' placeholder='Enter product name' />
+              <input defaultValue={data?.name} type='text' name='name' autoComplete='off' required minLength='2' className='text-[17px] border border-gray-300 rounded-lg block w-full py-2.5 px-3' placeholder='Enter product name' />
             </div>
             <div className='mb-6 basis-[25%]'>
               <label className='block mb-2 text-md font-medium text-gray-700'>Product Type</label>
-              <select name='productType'  className='text-[17px] border cursor-pointer border-gray-300 rounded-lg block w-full py-2.5 px-3'>
-                <option value=''>Select Product Type</option>
-                <option value='1' selected={data?.productType==1}>Featured</option>
-                <option value='2' selected={data?.productType==2}>New Arrivals</option>
-                <option value='3' selected={data?.productType==3}>On Sale</option>
+              <select name='productType' value={productType} onChange={(e)=>setProductType(e.target.value)} required className='text-[17px] border cursor-pointer border-gray-300 rounded-lg block w-full py-2.5 px-3'>
+                <option value='Featured'>Featured</option>
+                <option value='New'>New Arrivals</option>
+                <option value='On Sale'>On Sale</option>
+                <option value='Bestseller'>Bestseller</option>
               </select>
             </div>
             <div className='mb-6 basis-[25%]'>
               <label className='block mb-2 text-md font-medium text-gray-700'>Price</label>
-              <input defaultValue={data?.price} type='number' name='price' autoComplete='off' className='text-[17px] border border-gray-300 rounded-lg block w-full py-2.5 px-3' placeholder='Enter price' />
+              <input defaultValue={data?.price} type='number' name='price' autoComplete='off' required min='0' step='0.01' className='text-[17px] border border-gray-300 rounded-lg block w-full py-2.5 px-3' placeholder='Enter price' />
             </div>
             <div className='mb-6 basis-[25%]'>
               <label className='block mb-2 text-md font-medium text-gray-700'>order</label>
-              <input defaultValue={data?.order} type='number' name='order' autoComplete='off' className='text-[17px] border border-gray-300 rounded-lg block w-full py-2.5 px-3' placeholder='Enter order' />
+              <input defaultValue={data?.order ?? 0} type='number' name='order' autoComplete='off' min='0' className='text-[17px] border border-gray-300 rounded-lg block w-full py-2.5 px-3' placeholder='Enter order' />
             </div>
           </div>
           <div className='flex gap-3'>
@@ -347,7 +358,7 @@ export default function AddProduct() {
                   <div className='w-20 h-3 bg-slate-400 rounded-full' />
                 </div>
               </div>}
-              <input onChange={previewImage} type='file' name='image' accept='image/*' className='absolute inset-0 opacity-0 cursor-pointer' />
+              <input onChange={previewImage} type='file' name='image' accept='image/*' required={!id} className='absolute inset-0 opacity-0 cursor-pointer' />
             </div>
           </div>
           <div className='flex mb-6 flex-col'>

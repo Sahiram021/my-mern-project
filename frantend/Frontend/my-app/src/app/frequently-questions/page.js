@@ -23,6 +23,13 @@ const faqs = [
   },
 ];
 
+export const metadata = {
+  title: "Mineral Powder FAQs",
+  description:
+    "Answers about JGB Trading mineral powder grades, packaging, dispatch, samples and bulk pricing.",
+  alternates: { canonical: "/frequently-questions" },
+};
+
 export default function FrequentlyQuestionsPage() {
   return (
     <div className="bg-white">
@@ -62,4 +69,3 @@ export default function FrequentlyQuestionsPage() {
     </div>
   );
 }
-

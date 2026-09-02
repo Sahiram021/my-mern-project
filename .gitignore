@@ -2,6 +2,15 @@
 node_modules/
 **/node_modules/
 
+# Runtime uploads are preserved and deployed separately; never stage newly uploaded files.
+Backend/Backend/Uploads/
+Backend/Backend/uploads/
+
+# Local one-off data/admin maintenance helpers (never run or deploy automatically)
+Backend/Backend/seed_full_hierarchy.js
+Backend/Backend/seed_powder_products.js
+Backend/Backend/syncAdmin.js
+
 # Environment files (sensitive data - DO NOT commit)
 .env
 **/.env

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import React, { useRef } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
-import { Autoplay, Pagination, Navigation, EffectFade } from "swiper/modules";
+import { Autoplay, Pagination, EffectFade } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
@@ -64,9 +64,10 @@ export default function Homebanner({ imagepath, sdata = [] }) {
           image: img,
           link: link,
           badge: item.badge || item.tag || "JGB TRADING PRIVATE LIMITED",
+          fallbackImage: fallbackBanners[idx % fallbackBanners.length].image,
         };
       })
-    : fallbackBanners;
+    : fallbackBanners.map((item) => ({ ...item, fallbackImage: item.image }));
 
   const handlePrev = (e) => {
     e.preventDefault();
@@ -89,7 +90,7 @@ export default function Homebanner({ imagepath, sdata = [] }) {
       {/* LARGE FULL-WIDTH HERO BANNER SLIDER */}
       <section className="relative w-full overflow-hidden">
         <Swiper
-          modules={[Autoplay, Pagination, Navigation, EffectFade]}
+          modules={[Autoplay, Pagination, EffectFade]}
           effect="fade"
           fadeEffect={{ crossFade: true }}
           speed={800}
@@ -101,9 +102,10 @@ export default function Homebanner({ imagepath, sdata = [] }) {
           }}
           pagination={{
             clickable: true,
-            bulletActiveClass: "!bg-orange-500 !w-8 !rounded-full transition-all duration-300",
-            bulletClass: "inline-block h-2.5 w-2.5 rounded-full bg-white/50 cursor-pointer mx-1.5 transition-all",
           }}
+          observer
+          observeParents
+          watchOverflow
           onSwiper={(swiper) => {
             swiperRef.current = swiper;
           }}
@@ -113,10 +115,17 @@ export default function Homebanner({ imagepath, sdata = [] }) {
             <SwiperSlide key={slide.id || index} className="relative w-full">
               <Link href={slide.link} className="relative block w-full overflow-hidden">
                 {/* BIG PROMINENT HERO BANNER IMAGE (RESPONSIVE HEIGHTS) */}
-                <div className="relative w-full h-[220px] sm:h-[360px] md:h-[480px] lg:h-[540px] xl:h-[600px] bg-slate-900">
+                <div className="relative aspect-video w-full bg-slate-900">
                   <img
                     src={slide.image}
                     alt={slide.title}
+                    loading={index === 0 ? "eager" : "lazy"}
+                    decoding="async"
+                    onError={(event) => {
+                      if (event.currentTarget.dataset.fallbackApplied) return;
+                      event.currentTarget.dataset.fallbackApplied = "true";
+                      event.currentTarget.src = slide.fallbackImage;
+                    }}
                     className="h-full w-full object-cover object-center transition-transform duration-1000 group-hover:scale-105"
                   />
 
@@ -155,6 +164,7 @@ export default function Homebanner({ imagepath, sdata = [] }) {
           ))}
         </Swiper>
 
+        {bannerSlides.length > 1 && <>
         {/* CUSTOM NAVIGATION ARROWS (WORK ON ALL SCREENS & FULLY CLICKABLE) */}
         <button
           onClick={handlePrev}
@@ -173,6 +183,7 @@ export default function Homebanner({ imagepath, sdata = [] }) {
         >
           <FaChevronRight className="text-xs sm:text-base" />
         </button>
+        </>}
       </section>
 
       {/* FEATURE CARDS STRIP (RESPONSIVE 2-COL ON MOBILE) */}

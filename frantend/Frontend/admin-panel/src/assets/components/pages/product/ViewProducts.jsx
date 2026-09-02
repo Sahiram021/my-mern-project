@@ -4,12 +4,14 @@ import { useEffect } from 'react'
 import { useState } from 'react'
 import { FaFilter, FaMagnifyingGlass, FaPenToSquare, FaRotate } from 'react-icons/fa6'
 import { Link } from 'react-router'
-import { showSuccess, showWarning } from '../../common/notification/notification'
+import { showError, showSuccess, showWarning } from '../../common/notification/notification'
 import { confirmDelete } from '../../common/sweetAlert/deleteConfirm'
+import ImagePathPreview from '../../common/ImagePathPreview'
 
 export default function ViewProducts() {
     const [showSearch,setShowSearch]=useState(false)
     const [data,setData]=useState([])
+    const [imagePath,setImagePath]=useState('')
       const [ids,setIds]=useState([])
       const [searchName,setSearchName]=useState('')
       const [searchSlug,setSearchSlug]=useState('')
@@ -31,8 +33,10 @@ export default function ViewProducts() {
         .then((finalRes)=>{
           if(finalRes.status){
             setData(finalRes.data)
+            setImagePath(finalRes.staticPath || '')
           }
         })
+        .catch((error)=>showError(error.response?.data?.message || 'Unable to load products'))
       },[apiBaseUrl,searchName,searchSlug,searchPrice,searchOrder])
     
       useEffect(()=>{
@@ -71,6 +75,7 @@ export default function ViewProducts() {
               setIds([])
             }
           })
+          .catch((error)=>showError(error.response?.data?.message || 'Unable to delete products'))
         }else{
           showWarning('Please select at least one product')
         }
@@ -88,6 +93,7 @@ export default function ViewProducts() {
               setIds([])
             }
           })
+          .catch((error)=>showError(error.response?.data?.message || 'Unable to change product status'))
         }else{
           showWarning('Please select at least one product')
         }
@@ -152,6 +158,7 @@ export default function ViewProducts() {
               <th className='px-2 py-3 font-semibold'><span className='flex items-center justify-center gap-2'><input type='checkbox' checked={data.length>=1 && data.length==ids.length} onChange={allCheck} className='w-4 h-4 cursor-pointer' />Select</span></th>
               <th className='px-2 py-3 font-semibold'>S. No.</th>
               <th className='px-2 py-3 font-semibold'>Product Name</th>
+              <th className='px-2 py-3 font-semibold'>Image / URL</th>
               <th className='px-2 py-3 font-semibold'>parentCategory</th>
               <th className='px-2 py-3 font-semibold'>Price</th>
               <th className='px-2 py-3 font-semibold'>Order</th>
@@ -167,6 +174,7 @@ export default function ViewProducts() {
               <td className='px-2 py-4'><input type='checkbox' value={obj._id} checked={ids.includes(obj._id)} onChange={getCheckValue} className='product-row-check w-4 h-4 cursor-pointer' /></td>
               <td className='px-2 py-4'>{index + 1}</td>
               <td className='px-2 py-4'>{obj.name}</td>
+              <td className='px-2 py-4'><ImagePathPreview basePath={imagePath} filename={obj.image} alt={obj.name} /></td>
               <td className='px-2 py-4'>{obj.parentCategory?.name}</td>
               <td className='px-2 py-4'>{obj.price}</td>
               <td className='px-2 py-4'>{obj.order}</td>

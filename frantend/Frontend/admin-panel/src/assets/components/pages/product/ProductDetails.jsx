@@ -2,6 +2,7 @@ import axios from "axios";
 import { useCallback, useEffect, useState } from "react";
 import { FaArrowLeft } from "react-icons/fa6";
 import { Link, useParams } from "react-router";
+import ImagePathPreview from "../../common/ImagePathPreview";
 
 export default function ProductDetails() {
   let { id } = useParams();
@@ -81,24 +82,27 @@ export default function ProductDetails() {
 
           <div className="grid gap-5 lg:grid-cols-[360px_1fr]">
             <div className="rounded-md border border-slate-200 bg-white p-4 shadow-sm">
-              <div className="mb-4 aspect-square overflow-hidden rounded-md border border-slate-200 bg-slate-100">
-                <div className="flex h-full flex-col items-center justify-center gap-3 text-slate-500">
-                  <img src={imagePath + data.image} alt={data.name} className=" w-full h-full object-cover "/>
-                </div>
+              <div className="mb-4 rounded-md border border-slate-200 bg-slate-100 p-2">
+                <ImagePathPreview
+                  basePath={imagePath}
+                  filename={data.image}
+                  alt={data.name}
+                  imageClassName="h-72 w-full rounded object-contain"
+                />
               </div>
 
               <h2 className="mb-3 text-lg font-semibold text-slate-800">
                 Galler
               </h2>
               <div className="grid grid-cols-3 gap-3">
-                {data.gallery.map((img, index) => (
+                {(data.gallery || []).map((img, index) => (
                   <div
                     key={index}
                     className="aspect-square overflow-hidden rounded-md border border-slate-200 bg-slate-100"
                   >
                     <img
                       src={getGalleryImagePath(img)}
-                      alt={data.name}
+                      alt={`${data.name} gallery ${index + 1}`}
                       className="h-full w-full object-cover"
                     />
                   </div>
@@ -126,7 +130,7 @@ export default function ProductDetails() {
                       Parent Category
                     </p>
                     <p className="break-words text-[17px] font-semibold text-slate-900">
-                      {data.parentCategory.name}
+                      {data.parentCategory?.name || "-"}
                     </p>
                   </div>
                   <div className="rounded-md border border-slate-200 bg-slate-50 p-4">
@@ -134,7 +138,7 @@ export default function ProductDetails() {
                       Sub Category
                     </p>
                     <p className="break-words text-[17px] font-semibold text-slate-900">
-                      {data.subcategory.name}
+                      {data.subcategory?.name || "-"}
                     </p>
                   </div>
                   <div className="rounded-md border border-slate-200 bg-slate-50 p-4">
@@ -142,7 +146,7 @@ export default function ProductDetails() {
                       Sub Sub Category
                     </p>
                     <p className="break-words text-[17px] font-semibold text-slate-900">
-                      {data.subsubcategory.name}
+                      {data.subsubcategory?.name || "-"}
                     </p>
                   </div>
                   <div className="rounded-md border border-slate-200 bg-slate-50 p-4">
@@ -170,7 +174,7 @@ export default function ProductDetails() {
                     Color
                   </h2>
                   <div className="flex flex-wrap gap-2">
-                    {data.color.map((obj, index) => {
+                    {(data.color || []).map((obj, index) => {
                       return (
                         <span
                           key={index}
@@ -187,7 +191,7 @@ export default function ProductDetails() {
                     Material
                   </h2>
                   <div className="flex flex-wrap gap-2">
-                    {data.material.map((obj, index) => {
+                    {(data.material || []).map((obj, index) => {
                       return (
                         <span
                           key={index}

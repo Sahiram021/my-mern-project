@@ -53,7 +53,11 @@ export default function OrderPage() {
       return;
     }
 
-    fetchOrders();
+    const timer = window.setTimeout(() => {
+      void fetchOrders();
+    }, 0);
+
+    return () => window.clearTimeout(timer);
   }, [token, router, fetchOrders]);
 
   const handleRefresh = () => {
