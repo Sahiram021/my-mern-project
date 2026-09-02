@@ -78,6 +78,7 @@ App.use("/api/web", webRoutes);
 App.use("/web", webRoutes);
 
 App.get(["/", "/api", "/api/"], (req, res) => {
+    res.set("X-Robots-Tag", "noindex, nofollow, noarchive");
     res.send({ status: 1, message: "JGB Trading Backend API is running successfully!" });
 });
 
