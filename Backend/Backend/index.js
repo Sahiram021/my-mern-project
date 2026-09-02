@@ -60,10 +60,14 @@ const uploadFolders = [
 uploadFolders.forEach((folder) => {
     const canonicalPath = path.join(uploadsRoot, folder);
     const legacyPath = path.join(__dirname, "uploads", folder);
+    const legacyCasePaths = folder === "whychooseus"
+        ? [path.join(uploadsRoot, "whyChooseUs")]
+        : [];
     fs.mkdirSync(canonicalPath, { recursive: true });
     App.use(
         `/uploads/${folder}`,
         express.static(canonicalPath),
+        ...legacyCasePaths.map((uploadPath) => express.static(uploadPath)),
         express.static(legacyPath)
     );
 });
