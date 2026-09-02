@@ -1,4 +1,4 @@
-/* global process, Blob, fetch, FormData */
+/* global process */
 import fs from 'fs';
 import path from 'path';
 

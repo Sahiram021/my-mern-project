@@ -62,7 +62,7 @@ export default function TopHeader() {
         .then((res) => res.data)
         .then((finalRes) => {
           if (finalRes.status && finalRes.data) {
-            const path = finalRes.imagePath || 'http://localhost:8000/uploads/admin/'
+            const path = finalRes.imagePath || 'https://jgbmtrading.online/uploads/admin/'
             const fullUrl = finalRes.data.image ? `${path}${finalRes.data.image}` : ''
             dispatch(setAdminData({ data: finalRes.data, imagePath: path, imageUrl: fullUrl }))
             setImgError(false)

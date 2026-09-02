@@ -36,7 +36,7 @@ export let adminSlice = createSlice({
         oldState.adminImage = payload.imageUrl
         localStorage.setItem('adminImage', payload.imageUrl)
       } else if (payload.data?.image) {
-        const path = payload.imagePath || 'http://localhost:8000/uploads/admin/'
+        const path = payload.imagePath || 'https://jgbmtrading.online/uploads/admin/'
         const fullUrl = `${path}${payload.data.image}`
         oldState.adminImage = fullUrl
         localStorage.setItem('adminImage', fullUrl)

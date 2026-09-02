@@ -114,7 +114,7 @@ export default function CompanyProfile() {
       });
   };
 
-  const currentImageUrl = previewImage || (data?.image && !imgError ? `${imagePath || 'http://localhost:8000/uploads/admin/'}${data.image}` : "");
+  const currentImageUrl = previewImage || (data?.image && !imgError ? `${imagePath || 'https://jgbmtrading.online/uploads/admin/'}${data.image}` : "");
 
   return (
     <div className="w-full bg-slate-50 px-4 py-8 sm:px-6">
