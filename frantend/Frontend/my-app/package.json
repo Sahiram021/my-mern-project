@@ -8,7 +8,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test:cart": "node --test test/cart-flow.test.js"
+    "test:cart": "node --test test/cart-flow.test.js",
+    "test:dashboard": "node --test test/dashboard-navigation.test.js",
+    "test:frontend": "node --test test/*.test.js"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.9.1",

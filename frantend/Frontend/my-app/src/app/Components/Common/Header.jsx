@@ -645,6 +645,7 @@ export default function Header() {
               {mounted && token ? (
                 <Link
                   href="/my-dashboard"
+                  onClick={() => setMobileMenuOpen(false)}
                   className="flex items-center justify-between text-xs font-bold text-[#0b4ba2]"
                 >
                   <span className="flex items-center gap-2">
