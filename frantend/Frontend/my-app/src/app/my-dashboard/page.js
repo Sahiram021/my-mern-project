@@ -13,6 +13,7 @@ import { getUser } from "../utils/store";
 import { LogOut } from "../slice/loginSLice";
 import { clearCart } from "../slice/cartSLise";
 import { clearWishlist } from "../slice/wishlistSlice";
+import { clearAuthToken } from "../utils/authToken";
 
 export default function MyDashboardPage() {
 
@@ -261,11 +262,11 @@ export default function MyDashboardPage() {
   // =========================
 
   const userLogout = () => {
+    clearAuthToken();
     dispatch(LogOut());
     dispatch(clearCart());
     dispatch(clearWishlist());
     if (typeof window !== "undefined") {
-      localStorage.removeItem("token");
       localStorage.removeItem("user");
     }
     router.push("/login-register");

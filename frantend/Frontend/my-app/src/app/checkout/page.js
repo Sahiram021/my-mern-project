@@ -1,6 +1,6 @@
 "use client";
 
-import { redirect, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import InnerPageHero from "../Components/Page-Sections/InnerPageHero";
 import { useSelector } from "react-redux";
@@ -40,7 +40,11 @@ export default function CheckoutPage() {
     }
   }
   let dispatch = useDispatch();
-  let apibaseUrl = process.env.NEXT_PUBLIC_API_URL;
+  let apibaseUrl = process.env.NEXT_PUBLIC_API_URL || "https://jgbmtrading.online/api/web/";
+
+  useEffect(() => {
+    if (token) dispatch(fetchCartById());
+  }, [token, dispatch]);
   async function placeOrder() {
     const { default: izitoast } = await import("izitoast");
 

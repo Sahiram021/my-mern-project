@@ -13,10 +13,7 @@ import {
   fetchWishlist,
   removeFromWishlist,
 } from "../../slice/wishlistSlice";
-import {
-  addToCart as addToCartLocal,
-  toggleWishlist as toggleWishlistLocal,
-} from "../../utils/store";
+import { toggleWishlist as toggleWishlistLocal } from "../../utils/store";
 
 async function showToast(type, message) {
   try {
@@ -147,7 +144,6 @@ export default function ProductCard({ product, compact = false }) {
         await showToast("success", `${productName} added to cart!`);
         showMessage("Added to cart");
         dispatch(fetchCartById());
-        addToCartLocal(productWithImage, 1);
       } else {
         await showToast("warning", res.data?.message || "Could not add to cart");
         showMessage(res.data?.message || "Could not add to cart");

@@ -10,6 +10,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { getToken } from "../slice/loginSLice";
 import { fetchCartById } from "../slice/cartSLise";
 import { fetchWishlist } from "../slice/wishlistSlice";
+import { setAuthToken } from "../utils/authToken";
 
 export default function LoginRegisterPage() {
   const router = useRouter();
@@ -52,9 +53,7 @@ export default function LoginRegisterPage() {
         setLoading(false);
         if (finalRes.status) {
           toast.success(finalRes.message || "Login Successful");
-          if (typeof window !== "undefined") {
-            localStorage.setItem("token", finalRes.token);
-          }
+          setAuthToken(finalRes.token);
           dispatch(getToken({ token: finalRes.token }));
           dispatch(fetchCartById());
           dispatch(fetchWishlist());
@@ -126,9 +125,7 @@ export default function LoginRegisterPage() {
 
         // If backend returned token directly in register response
         if (finalRes.token) {
-          if (typeof window !== "undefined") {
-            localStorage.setItem("token", finalRes.token);
-          }
+          setAuthToken(finalRes.token);
           dispatch(getToken({ token: finalRes.token }));
           dispatch(fetchCartById());
           dispatch(fetchWishlist());
@@ -146,9 +143,7 @@ export default function LoginRegisterPage() {
           const loginData = loginRes.data;
 
           if (loginData.status && loginData.token) {
-            if (typeof window !== "undefined") {
-              localStorage.setItem("token", loginData.token);
-            }
+            setAuthToken(loginData.token);
             dispatch(getToken({ token: loginData.token }));
             dispatch(fetchCartById());
             dispatch(fetchWishlist());
@@ -454,4 +449,3 @@ export default function LoginRegisterPage() {
     </main>
   );
 }
-

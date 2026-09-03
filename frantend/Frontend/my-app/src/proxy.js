@@ -6,7 +6,6 @@ const protectedRoutes = [
   "/change-password",
   "/checkout",
   "/wishlist",
-  "/cart",
 ];
 
 const localProductSlugs = new Set(
@@ -83,7 +82,6 @@ export const config = {
     "/change-password/:path*",
     "/checkout/:path*",
     "/wishlist/:path*",
-    "/cart/:path*",
     "/product-details/:path*",
     "/categories/:path*",
   ],

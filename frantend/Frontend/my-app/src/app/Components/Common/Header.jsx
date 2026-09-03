@@ -776,6 +776,7 @@ export default function Header() {
 
                   <Link
                     href="/cart"
+                    onClick={() => setMobileMenuOpen(false)}
                     className="flex items-center justify-between rounded-xl p-2.5 text-xs font-bold text-slate-700 transition hover:bg-slate-50"
                   >
                     <span className="flex items-center gap-2">
